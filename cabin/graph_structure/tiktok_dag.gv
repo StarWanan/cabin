@@ -1,0 +1,145 @@
+// TikTok Recommendation DAG
+digraph {
+	rankdir=LR size="50,200"
+	user_region_filter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	request [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	impression_container_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	bg_session_gremlin_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	weiss_predict_ip_port_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	user_feedback_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	context_bert_embedding_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	go_user_feature_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	weiss_embedding_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	search_history_bert_recall [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	viking_base_recall [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	viking_click_recall [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	global_hot_abase_recall [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	personalized_shortterm_recall [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	darwin_passive_search_click_recall [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	snake_merger [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	group_info_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	combine_profile_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	determine_recent_click_method [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	determine_click_dedup_method [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	determine_review_level_method [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	determine_search_intent_method [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	determine_format_method [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	debug_item_query_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	filter_executor [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	impression_filter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	determine_per_user_impression_num_method [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	weiss_extract_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	marine_roughsort_sorter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rough_predict_sorter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rule_query_keyword_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rule_query_term_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	after_roughsort_ranking_rule [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	pre_predict_cut_method [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	predict_sorter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	online_emoji_filter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rule_recall_reason_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rpc_tns_filter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	reviewed_wordlist_filter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	bert_embedding_retriever [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	feedback_query_filter [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	bert_distance_scatter_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rule_edit_distance_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rule_prepostfix_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rule_jaccard_similarity_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rule_lcs_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	rule_query_stem_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	ner_scatter_label [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	ranking_rule [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	not_log_in_user_ranking_rule [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	response [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	predict_ack [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	group_miss_sinker [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	impression_container_sinker [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	debug_response [fillcolor="#e0f0ff" shape=box style="rounded,filled"]
+	request -> go_user_feature_retriever
+	filter_executor -> impression_filter
+	feedback_query_filter -> bert_distance_scatter_label
+	weiss_predict_ip_port_retriever -> weiss_embedding_retriever
+	rule_recall_reason_label -> rule_query_stem_label
+	impression_container_retriever -> personalized_shortterm_recall
+	bg_session_gremlin_retriever -> context_bert_embedding_retriever
+	impression_container_retriever -> search_history_bert_recall
+	response -> predict_ack
+	impression_container_retriever -> viking_base_recall
+	combine_profile_retriever -> predict_sorter
+	predict_sorter -> rpc_tns_filter
+	rule_recall_reason_label -> rule_lcs_label
+	weiss_extract_retriever -> marine_roughsort_sorter
+	rough_predict_sorter -> after_roughsort_ranking_rule
+	rule_prepostfix_label -> ranking_rule
+	group_info_retriever -> determine_search_intent_method
+	bert_embedding_retriever -> feedback_query_filter
+	snake_merger -> combine_profile_retriever
+	group_info_retriever -> debug_item_query_retriever
+	predict_sorter -> reviewed_wordlist_filter
+	rule_recall_reason_label -> rule_edit_distance_label
+	rule_query_term_label -> after_roughsort_ranking_rule
+	darwin_passive_search_click_recall -> snake_merger
+	rule_recall_reason_label -> rule_prepostfix_label
+	debug_item_query_retriever -> debug_response
+	go_user_feature_retriever -> weiss_embedding_retriever
+	response -> debug_response
+	not_log_in_user_ranking_rule -> response
+	determine_per_user_impression_num_method -> rough_predict_sorter
+	group_info_retriever -> determine_recent_click_method
+	group_info_retriever -> determine_review_level_method
+	ranking_rule -> not_log_in_user_ranking_rule
+	weiss_embedding_retriever -> global_hot_abase_recall
+	bert_distance_scatter_label -> ranking_rule
+	impression_container_retriever -> viking_click_recall
+	predict_sorter -> online_emoji_filter
+	context_bert_embedding_retriever -> search_history_bert_recall
+	group_info_retriever -> determine_click_dedup_method
+	rule_jaccard_similarity_label -> ranking_rule
+	weiss_embedding_retriever -> personalized_shortterm_recall
+	personalized_shortterm_recall -> snake_merger
+	request -> impression_container_retriever
+	viking_base_recall -> snake_merger
+	request -> weiss_predict_ip_port_retriever
+	pre_predict_cut_method -> predict_sorter
+	impression_filter -> rule_query_term_label
+	weiss_embedding_retriever -> viking_base_recall
+	rule_recall_reason_label -> rule_jaccard_similarity_label
+	online_emoji_filter -> rule_recall_reason_label
+	impression_filter -> determine_per_user_impression_num_method
+	rpc_tns_filter -> rule_recall_reason_label
+	determine_per_user_impression_num_method -> weiss_extract_retriever
+	user_region_filter -> request
+	marine_roughsort_sorter -> after_roughsort_ranking_rule
+	response -> impression_container_sinker
+	request -> darwin_passive_search_click_recall
+	snake_merger -> group_info_retriever
+	determine_format_method -> filter_executor
+	search_history_bert_recall -> snake_merger
+	determine_search_intent_method -> filter_executor
+	determine_review_level_method -> filter_executor
+	rule_edit_distance_label -> ranking_rule
+	impression_filter -> rule_query_keyword_label
+	user_feedback_retriever -> context_bert_embedding_retriever
+	viking_click_recall -> snake_merger
+	rule_query_keyword_label -> after_roughsort_ranking_rule
+	weiss_predict_ip_port_retriever -> rough_predict_sorter
+	after_roughsort_ranking_rule -> pre_predict_cut_method
+	predict_sorter -> bert_embedding_retriever
+	weiss_embedding_retriever -> viking_click_recall
+	request -> user_feedback_retriever
+	bg_session_gremlin_retriever -> weiss_embedding_retriever
+	request -> bg_session_gremlin_retriever
+	reviewed_wordlist_filter -> rule_recall_reason_label
+	determine_click_dedup_method -> impression_filter
+	determine_recent_click_method -> not_log_in_user_ranking_rule
+	response -> group_miss_sinker
+	group_info_retriever -> determine_format_method
+	global_hot_abase_recall -> snake_merger
+	impression_container_retriever -> weiss_embedding_retriever
+	ner_scatter_label -> ranking_rule
+	rule_recall_reason_label -> ner_scatter_label
+	rule_lcs_label -> ranking_rule
+	impression_container_retriever -> global_hot_abase_recall
+	rule_query_stem_label -> ranking_rule
+}
