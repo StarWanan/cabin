@@ -1,18 +1,29 @@
 import plotly.graph_objects as go
-from layer1 import nodes as nodes1, connections as connections1
-from layer2 import nodes as nodes2, connections as connections2
-from layer3 import nodes as nodes3, connections as connections3
-from layer4 import nodes as nodes4, connections as connections4
 
-nodes = {**nodes1, **nodes2, **nodes3, **nodes4}
-connections = connections1 + connections2 + connections3 + connections4
+# 定义节点坐标 (x, y, z)
+nodes = {
+    "A1": (0, 0, 0),
+    "A2": (5, 0, 0),
+    "A3": (10, 0, 0),
+    "A4": (15, 5, 5),
+    "A5": (5, 10, 0),
+    "A6": (10, 10, 0),
+    "A7": (10, 10, 5),
+    "B2": (20, 5, 5),
+    "B3": (25, 5, 5),
+}
 
-# 提取节点的坐标
-x_coords = [coord[0] for coord in nodes.values()]
-y_coords = [coord[1] for coord in nodes.values()]
-z_coords = [coord[2] for coord in nodes.values()]
-node_names = list(nodes.keys())
-
+# 定义线缆连接关系
+connections = [
+    ("A1", "A2"),
+    ("A2", "A3"),
+    ("A3", "A4"),
+    ("A2", "A5"),
+    ("A5", "A6"),
+    ("A6", "A7"),
+    ("A4", "B2"),
+    ("A4", "B3"),
+]
 
 # 提取节点的坐标
 x_coords = [coord[0] for coord in nodes.values()]
@@ -27,7 +38,7 @@ node_trace = go.Scatter3d(
     z=z_coords,
     mode='markers+text',
     marker=dict(
-        size=1,  # 节点大小
+        size=5,  # 节点大小
         color='red',  # 节点颜色
         opacity=0.8
     ),
