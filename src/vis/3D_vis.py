@@ -1,8 +1,8 @@
 import plotly.graph_objects as go
-from layer1 import nodes as nodes1, connections as connections1
-from layer2 import nodes as nodes2, connections as connections2
-from layer3 import nodes as nodes3, connections as connections3
-from layer4 import nodes as nodes4, connections as connections4
+from cabin.src.data.layer1 import nodes as nodes1, connections as connections1
+from cabin.src.data.layer2 import nodes as nodes2, connections as connections2
+from cabin.src.data.layer3 import nodes as nodes3, connections as connections3
+from cabin.src.data.layer4 import nodes as nodes4, connections as connections4
 
 nodes = {**nodes1, **nodes2, **nodes3, **nodes4}
 connections = connections1 + connections2 + connections3 + connections4
