@@ -1,5 +1,15 @@
 import heapq
 import math
+from cabin.src.data.layer1 import nodes as nodes1, connections as connections1
+from cabin.src.data.layer2 import nodes as nodes2, connections as connections2
+from cabin.src.data.layer3 import nodes as nodes3, connections as connections3
+from cabin.src.data.layer4 import nodes as nodes4, connections as connections4
+from cabin.src.data.hub import nodes as nodes_hub, connections as connections_hub
+from cabin.src.data.device import device
+from cabin.src.vis.vis import remove_duplicate_nodes
+
+LINE_CAPACITY = 100
+
 
 class Edge:
     def __init__(self, to, c, d, next_edge):
@@ -51,6 +61,8 @@ class Graph:
                 nearest = node_id
         return nearest
 
+
+
 def a_star_route(graph, start_node, end_node):
     """A*算法实现路径规划"""
     # 启发函数：欧氏距离估计
@@ -101,44 +113,52 @@ def a_star_route(graph, start_node, end_node):
     
     return None  # 无可行路径
 
-# 示例使用
+
+def build_graph(nodes, connections):
+    """根据nodes和connections建立图"""
+    node_list = [(0, 0, 0)] + [nodes[key] for key in sorted(nodes.keys())]
+    graph = Graph(node_list)
+    node_index_map = {key: idx + 1 for idx, key in enumerate(sorted(nodes.keys()))}
+
+    # 容量
+    for u, v in connections:
+        graph.add_bidirectional_edge(node_index_map[u], node_index_map[v], LINE_CAPACITY)
+
+    # print("Nodes:")
+    # for idx, coord in enumerate(node_list):
+    #     print(f"Node {idx}: {coord}")
+    #
+    # print("\nEdges:")
+    # for edge in graph.edges:
+    #     print(f"Edge from {edge.to} with distance {edge.d}")
+
+    return graph
+
+
 if __name__ == "__main__":
-    # 节点坐标
-    nodes = [
-        (0, 0, 0),      # 节点0
-        (1, 0, 0),      # 节点1
-        (0, 1, 0),      # 节点2
-        (0, 0, 1)       # 节点3
-    ]
-    
-    # 初始化网络
-    graph = Graph(nodes)
-    graph.add_bidirectional_edge(0, 1, 10)  # 0-1
-    graph.add_bidirectional_edge(0, 2, 15)  # 0-2
-    graph.add_bidirectional_edge(1, 3, 20)  # 1-3
-    
-    # 设备列表
-    devices = {
-        1: {'pos': (0, 0, 0), 'power': True},   # 节点1
-        2: {'pos': (1, 0, 0), 'power': False},  # 节点2
-        3: {'pos': (0, 1, 0), 'power': False}   # 节点3
-    }
-    
-    # 连接请求处理示例
-    connection_requests = [
-        (1, 2, 5),  # 节点1 -> 节点2
-        (1, 3, 8)   # 节点1 -> 节点3
-    ]
-    
-    # ex: 处理第一个连接请求
-    s_device = devices[1]
-    t_device = devices[2]
-    
-    # 定位设备到最近的节点
-    s_node = graph.find_nearest_node(*s_device['pos'])
-    t_node = graph.find_nearest_node(*t_device['pos'])
-    
-    
+    nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
+    connections = connections1 + connections2 + connections3 + connections4 + connections_hub
+
+    nodes, connections = remove_duplicate_nodes(nodes, connections)
+
+    graph = build_graph(nodes, connections)
+
+    device_3_1 = device["device_3_1"]
+    device_4_3 = device["device_4_3"]
+
+    print("Device 3_1:", device_3_1)
+    print("Device 4_3:", device_4_3)
+
+    s_node = graph.find_nearest_node(*device_3_1)
+    t_node = graph.find_nearest_node(*device_4_3)
+
+    print(f"Device 3_1 is located at node {s_node} with position {device_3_1}")
+    print(f"Device 4_3 is located at node {t_node} with position {device_4_3}")
+
     path = a_star_route(graph, s_node, t_node)
-    print(f"Route from {s_device['pos']} to {t_device['pos']}:")
+
+    print(f"Route from {device_3_1} to {device_4_3}:")
     print(" -> ".join(f"Node {n}" for n in path) if path else "No path found")
+
+
+
