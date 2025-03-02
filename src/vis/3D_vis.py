@@ -3,16 +3,10 @@ from cabin.src.data.layer1 import nodes as nodes1, connections as connections1
 from cabin.src.data.layer2 import nodes as nodes2, connections as connections2
 from cabin.src.data.layer3 import nodes as nodes3, connections as connections3
 from cabin.src.data.layer4 import nodes as nodes4, connections as connections4
+from cabin.src.data.hub import nodes as nodes_hub, connections as connections_hub
 
-nodes = {**nodes1, **nodes2, **nodes3, **nodes4}
-connections = connections1 + connections2 + connections3 + connections4
-
-# 提取节点的坐标
-x_coords = [coord[0] for coord in nodes.values()]
-y_coords = [coord[1] for coord in nodes.values()]
-z_coords = [coord[2] for coord in nodes.values()]
-node_names = list(nodes.keys())
-
+nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
+connections = connections1 + connections2 + connections3 + connections4 + connections_hub
 
 # 提取节点的坐标
 x_coords = [coord[0] for coord in nodes.values()]
