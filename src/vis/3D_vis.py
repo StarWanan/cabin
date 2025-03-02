@@ -4,6 +4,7 @@ from cabin.src.data.layer2 import nodes as nodes2, connections as connections2
 from cabin.src.data.layer3 import nodes as nodes3, connections as connections3
 from cabin.src.data.layer4 import nodes as nodes4, connections as connections4
 from cabin.src.data.hub import nodes as nodes_hub, connections as connections_hub
+from cabin.src.data.device import device
 
 nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
 connections = connections1 + connections2 + connections3 + connections4 + connections_hub
@@ -13,6 +14,11 @@ x_coords = [coord[0] for coord in nodes.values()]
 y_coords = [coord[1] for coord in nodes.values()]
 z_coords = [coord[2] for coord in nodes.values()]
 node_names = list(nodes.keys())
+
+x_device = [coord[0] for coord in device.values()]
+y_device = [coord[1] for coord in device.values()]
+z_device = [coord[2] for coord in device.values()]
+device_names = list(device.keys())
 
 # 创建 3D 散点图（节点）
 node_trace = go.Scatter3d(
@@ -29,6 +35,21 @@ node_trace = go.Scatter3d(
     textposition="top center"
 )
 
+# 创建 3D 散点图（设备）
+device_trace = go.Scatter3d(
+    x=x_device,
+    y=y_device,
+    z=z_device,
+    mode='markers+text',
+    marker=dict(
+        size=3,  # 设备节点大小
+        color='orange',  # 设备节点颜色
+        opacity=0.8
+    ),
+    text=device_names,  # 设备名称
+    textposition="top center"
+)
+
 # 创建线缆（连接）
 line_traces = []
 for start, end in connections:
@@ -36,7 +57,7 @@ for start, end in connections:
     x_line = [nodes[start][0], nodes[end][0], None]  # None 用于分隔线段
     y_line = [nodes[start][1], nodes[end][1], None]
     z_line = [nodes[start][2], nodes[end][2], None]
-    
+
     # 创建线缆
     line_trace = go.Scatter3d(
         x=x_line,
@@ -50,8 +71,8 @@ for start, end in connections:
     )
     line_traces.append(line_trace)
 
-# 合并节点和线缆
-fig = go.Figure(data=[node_trace] + line_traces)
+# 合并节点、设备和线缆
+fig = go.Figure(data=[node_trace, device_trace] + line_traces)
 
 # 设置图形布局
 fig.update_layout(
