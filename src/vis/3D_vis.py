@@ -9,6 +9,25 @@ from cabin.src.data.device import device
 nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
 connections = connections1 + connections2 + connections3 + connections4 + connections_hub
 
+def remove_duplicate_nodes(nodes, connections):
+    # Create a dictionary to map node values to their first unique key
+    value_to_key = {}
+    new_nodes = {}
+    for key, value in nodes.items():
+        if value not in value_to_key:
+            value_to_key[value] = key
+            new_nodes[key] = value
+
+    # Update connections to use the first unique key
+    new_connections = []
+    for conn in connections:
+        new_conn = (value_to_key[nodes[conn[0]]], value_to_key[nodes[conn[1]]])
+        new_connections.append(new_conn)
+
+    return new_nodes, new_connections
+
+nodes, connections = remove_duplicate_nodes(nodes, connections)
+
 # 提取节点的坐标
 x_coords = [coord[0] for coord in nodes.values()]
 y_coords = [coord[1] for coord in nodes.values()]
