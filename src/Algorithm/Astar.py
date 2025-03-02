@@ -6,7 +6,7 @@ from cabin.src.data.layer3 import nodes as nodes3, connections as connections3
 from cabin.src.data.layer4 import nodes as nodes4, connections as connections4
 from cabin.src.data.hub import nodes as nodes_hub, connections as connections_hub
 from cabin.src.data.device import device
-from cabin.src.vis.vis import remove_duplicate_nodes
+from cabin.src.vis.vis import remove_duplicate_nodes, visualize_graph
 
 LINE_CAPACITY = 100
 
@@ -159,6 +159,8 @@ if __name__ == "__main__":
 
     print(f"Route from {device_3_1} to {device_4_3}:")
     print(" -> ".join(f"Node {n}" for n in path) if path else "No path found")
+
+    visualize_graph(nodes, connections, device, path=path)
 
 
 

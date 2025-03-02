@@ -6,8 +6,6 @@ from cabin.src.data.layer4 import nodes as nodes4, connections as connections4
 from cabin.src.data.hub import nodes as nodes_hub, connections as connections_hub
 from cabin.src.data.device import device
 
-nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
-connections = connections1 + connections2 + connections3 + connections4 + connections_hub
 
 def remove_duplicate_nodes(nodes, connections):
     # Create a dictionary to map node values to their first unique key
@@ -26,84 +24,120 @@ def remove_duplicate_nodes(nodes, connections):
 
     return new_nodes, new_connections
 
-nodes, connections = remove_duplicate_nodes(nodes, connections)
 
-# 提取节点的坐标
-x_coords = [coord[0] for coord in nodes.values()]
-y_coords = [coord[1] for coord in nodes.values()]
-z_coords = [coord[2] for coord in nodes.values()]
-node_names = list(nodes.keys())
 
-x_device = [coord[0] for coord in device.values()]
-y_device = [coord[1] for coord in device.values()]
-z_device = [coord[2] for coord in device.values()]
-device_names = list(device.keys())
+def visualize_graph(nodes, connections, device, path=None):
+    """可视化节点、连接、设备和路径"""
+    import plotly.graph_objects as go
 
-# 创建 3D 散点图（节点）
-node_trace = go.Scatter3d(
-    x=x_coords,
-    y=y_coords,
-    z=z_coords,
-    mode='markers+text',
-    marker=dict(
-        size=1,  # 节点大小
-        color='red',  # 节点颜色
-        opacity=0.8
-    ),
-    text=node_names,  # 节点名称
-    textposition="top center"
-)
+    # 提取节点的坐标
+    x_coords = [coord[0] for coord in nodes.values()]
+    y_coords = [coord[1] for coord in nodes.values()]
+    z_coords = [coord[2] for coord in nodes.values()]
+    node_names = list(nodes.keys())
 
-# 创建 3D 散点图（设备）
-device_trace = go.Scatter3d(
-    x=x_device,
-    y=y_device,
-    z=z_device,
-    mode='markers+text',
-    marker=dict(
-        size=3,  # 设备节点大小
-        color='orange',  # 设备节点颜色
-        opacity=0.8
-    ),
-    text=device_names,  # 设备名称
-    textposition="top center"
-)
+    # 提取设备坐标
+    x_device = [coord[0] for coord in device.values()]
+    y_device = [coord[1] for coord in device.values()]
+    z_device = [coord[2] for coord in device.values()]
+    device_names = list(device.keys())
 
-# 创建线缆（连接）
-line_traces = []
-for start, end in connections:
-    # 获取起点和终点的坐标
-    x_line = [nodes[start][0], nodes[end][0], None]  # None 用于分隔线段
-    y_line = [nodes[start][1], nodes[end][1], None]
-    z_line = [nodes[start][2], nodes[end][2], None]
-
-    # 创建线缆
-    line_trace = go.Scatter3d(
-        x=x_line,
-        y=y_line,
-        z=z_line,
-        mode='lines',
-        line=dict(
-            color='purple',  # 线缆颜色
-            width=3
-        )
+    # 创建 3D 散点图（节点）
+    node_trace = go.Scatter3d(
+        x=x_coords,
+        y=y_coords,
+        z=z_coords,
+        mode='markers+text',
+        marker=dict(
+            size=1,
+            color='red',
+            opacity=0.8
+        ),
+        text=node_names,
+        textposition="top center"
     )
-    line_traces.append(line_trace)
 
-# 合并节点、设备和线缆
-fig = go.Figure(data=[node_trace, device_trace] + line_traces)
+    # 创建 3D 散点图（设备）
+    device_trace = go.Scatter3d(
+        x=x_device,
+        y=y_device,
+        z=z_device,
+        mode='markers+text',
+        marker=dict(
+            size=3,
+            color='orange',
+            opacity=0.8
+        ),
+        text=device_names,
+        textposition="top center"
+    )
 
-# 设置图形布局
-fig.update_layout(
-    scene=dict(
-        xaxis_title='X Axis',
-        yaxis_title='Y Axis',
-        zaxis_title='Z Axis',
-        aspectmode='data'  # 保持比例
-    ),
-    title="船舶主干线缆节点和连接示意图",
-    showlegend=False
-)
+    # 创建线缆连接
+    line_traces = []
+    for start, end in connections:
+        x_line = [nodes[start][0], nodes[end][0], None]
+        y_line = [nodes[start][1], nodes[end][1], None]
+        z_line = [nodes[start][2], nodes[end][2], None]
 
-# 显示图形
-fig.show()
+        line_trace = go.Scatter3d(
+            x=x_line,
+            y=y_line,
+            z=z_line,
+            mode='lines',
+            line=dict(
+                color='#1f77b4',  # 基础连接线颜色
+                width=2
+            )
+        )
+        line_traces.append(line_trace)
+
+    # 添加路径可视化
+    if path:
+        sorted_keys = sorted(nodes.keys())
+        path_coords = [nodes[sorted_keys[node_id - 1]] for node_id in path]
+
+        # 生成路径线段
+        path_x, path_y, path_z = [], [], []
+        for i in range(len(path_coords) - 1):
+            start = path_coords[i]
+            end = path_coords[i + 1]
+            path_x += [start[0], end[0], None]
+            path_y += [start[1], end[1], None]
+            path_z += [start[2], end[2], None]
+
+        path_trace = go.Scatter3d(
+            x=path_x,
+            y=path_y,
+            z=path_z,
+            mode='lines',
+            line=dict(
+                color='red',
+                width=6
+            ),
+            name='A* Path'
+        )
+        line_traces.append(path_trace)
+
+    # 合并图形
+    fig = go.Figure(data=[node_trace, device_trace] + line_traces)
+    fig.update_layout(
+        scene=dict(
+            xaxis_title='X Axis',
+            yaxis_title='Y Axis',
+            zaxis_title='Z Axis',
+            aspectmode='data'
+        ),
+        title="船舶主干线缆节点和连接示意图",
+        showlegend=True
+    )
+
+    fig.show()
+
+
+if __name__ == "__main__":
+    # 提取节点的坐标
+    nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
+    connections = connections1 + connections2 + connections3 + connections4 + connections_hub
+    nodes, connections = remove_duplicate_nodes(nodes, connections)
+
+    visualize_graph(nodes, connections, device)
