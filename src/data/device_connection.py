@@ -1,6 +1,6 @@
 import random
 import itertools
-from device import device
+from cabin.src.data.device import device
 
 def generate_device_connections(seed, num_pairs=10):
     random.seed(seed)
