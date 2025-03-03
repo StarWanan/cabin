@@ -47,15 +47,14 @@ class Graph:
         self.add_directed_edge(v, u, c)
 
     def find_nearest_node(self, x, y, z):
-        """根据坐标找最近节点（用于设备定位）"""
+        """根据坐标找最近节点（用于设备定位），只考虑x和y坐标"""
         min_dist = float('inf')
         nearest = -1
         for node_id in range(1, len(self.nodes)):
             nx, ny, nz = self.nodes[node_id]
             dist = math.sqrt(
-                (nx-x)**2 + 
-                (ny-y)**2 + 
-                (nz-z)**2
+                (nx - x) ** 2 +
+                (ny - y) ** 2
             )
             if dist < min_dist:
                 min_dist = dist
@@ -181,8 +180,7 @@ if __name__ == "__main__":
             coordinates = get_coordinates(graph, path)
             coordinates_str = ' -> '.join(map(str, coordinates))
             print(f"Coordinates: {coordinates_str}")
-            # visualize_graph(nodes, connections, device, path=path,
-            #                 title=f"{conn['device1']} to {conn['device2']}")
+            visualize_graph(nodes, connections, device, path=path)
         else:
             print("No valid path found")
 
