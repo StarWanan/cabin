@@ -17,6 +17,7 @@ class Edge:
         self.to = to        # 目标节点编号
         self.c = c          # 边容量
         self.d = d          # 边距离
+        self.real_c = 0  # 边目前实际容量
         self.next = next_edge
 
 class Graph:
@@ -144,6 +145,19 @@ def get_coordinates(graph, node_list):
             coordinates.append(None)  # 如果节点编号无效，返回None
     return coordinates
 
+def update_edge_real_capacity(graph, path, load_rate):
+    """更新路径上所有边的实际容量"""
+    for i in range(len(path) - 1):
+        current_node = path[i]
+        next_node = path[i + 1]
+        edge_idx = graph.head[current_node]
+        while edge_idx != -1:
+            edge = graph.edges[edge_idx]
+            if edge.to == next_node:
+                edge.real_c += load_rate
+                break
+            edge_idx = edge.next
+
 
 if __name__ == "__main__":
     nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
@@ -183,7 +197,12 @@ if __name__ == "__main__":
             coordinates_str = ' -> '.join(map(str, coordinates))
             print(f"Coordinates: {coordinates_str}")
             paths.append(path)
+
+            update_edge_real_capacity(graph, path, conn["load_rate"])
         else:
             print("No valid path found")
 
-    visualize_graph(nodes, connections, device, paths=paths)
+    # visualize_graph(nodes, connections, device, paths=paths)
+
+    # for edge in graph.edges:
+    #     print(f"Edge to {edge.to}, real capacity: {edge.real_c}")
