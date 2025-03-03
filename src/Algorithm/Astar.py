@@ -135,6 +135,15 @@ def build_graph(nodes, connections):
 
     return graph
 
+def get_coordinates(graph, node_list):
+    coordinates = []
+    for node in node_list:
+        if 1 <= node < len(graph.nodes):
+            coordinates.append(graph.nodes[node])
+        else:
+            coordinates.append(None)  # 如果节点编号无效，返回None
+    return coordinates
+
 
 if __name__ == "__main__":
     nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
@@ -169,6 +178,9 @@ if __name__ == "__main__":
         print(f"Load rate: {conn['load_rate']}")
         if path:
             print(f"Path: {' -> '.join(map(str, path))}")
+            coordinates = get_coordinates(graph, path)
+            coordinates_str = ' -> '.join(map(str, coordinates))
+            print(f"Coordinates: {coordinates_str}")
             # visualize_graph(nodes, connections, device, path=path,
             #                 title=f"{conn['device1']} to {conn['device2']}")
         else:
