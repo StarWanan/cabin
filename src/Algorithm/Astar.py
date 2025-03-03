@@ -7,6 +7,7 @@ from cabin.src.data.layer4 import nodes as nodes4, connections as connections4
 from cabin.src.data.hub import nodes as nodes_hub, connections as connections_hub
 from cabin.src.data.device import device
 from cabin.src.vis.vis import remove_duplicate_nodes, visualize_graph
+from cabin.src.data.device_connection import generate_device_connections
 
 LINE_CAPACITY = 100
 
@@ -138,29 +139,41 @@ def build_graph(nodes, connections):
 if __name__ == "__main__":
     nodes = {**nodes1, **nodes2, **nodes3, **nodes4, **nodes_hub}
     connections = connections1 + connections2 + connections3 + connections4 + connections_hub
-
     nodes, connections = remove_duplicate_nodes(nodes, connections)
-
     graph = build_graph(nodes, connections)
 
-    device_3_1 = device["device_3_1"]
-    device_4_3 = device["device_4_3"]
+    device_connections = generate_device_connections(seed=42, num_pairs=10)
 
-    print("Device 3_1:", device_3_1)
-    print("Device 4_3:", device_4_3)
+    routing_results = []
 
-    s_node = graph.find_nearest_node(*device_3_1)
-    t_node = graph.find_nearest_node(*device_4_3)
+    for conn in device_connections:
+        dev1_coord = device[conn["device1"]]
+        dev2_coord = device[conn["device2"]]
 
-    print(f"Device 3_1 is located at node {s_node} with position {device_3_1}")
-    print(f"Device 4_3 is located at node {t_node} with position {device_4_3}")
+        # 定位最近网络节点
+        start_node = graph.find_nearest_node(*dev1_coord)
+        end_node = graph.find_nearest_node(*dev2_coord)
 
-    path = a_star_route(graph, s_node, t_node)
+        # 计算路径
+        path = a_star_route(graph, start_node, end_node)
 
-    print(f"Route from {device_3_1} to {device_4_3}:")
-    print(" -> ".join(f"Node {n}" for n in path) if path else "No path found")
+        result = {
+            "connection": conn,
+            "path_nodes": path,
+            "start_node": start_node,
+            "end_node": end_node
+        }
+        routing_results.append(result)
 
-    visualize_graph(nodes, connections, device, path=path)
+        print(f"\nConnection: {conn['device1']} -> {conn['device2']}")
+        print(f"Load rate: {conn['load_rate']}")
+        if path:
+            print(f"Path: {' -> '.join(map(str, path))}")
+            # visualize_graph(nodes, connections, device, path=path,
+            #                 title=f"{conn['device1']} to {conn['device2']}")
+        else:
+            print("No valid path found")
+
 
 
 
