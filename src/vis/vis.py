@@ -26,7 +26,7 @@ def remove_duplicate_nodes(nodes, connections):
 
 
 
-def visualize_graph(nodes, connections, device, path=None):
+def visualize_graph(nodes, connections, device, paths=None):
     """可视化节点、连接、设备和路径"""
     import plotly.graph_objects as go
 
@@ -91,32 +91,39 @@ def visualize_graph(nodes, connections, device, path=None):
         )
         line_traces.append(line_trace)
 
-    # 添加路径可视化
-    if path:
+    path_colors = [
+        'red', 'green', 'blue', 'purple', 'orange', 'brown', 'pink', 'gray', 'cyan', 'magenta'
+    ]
+
+    # 添加路径可视化（多条版）
+    if paths:
         sorted_keys = sorted(nodes.keys())
-        path_coords = [nodes[sorted_keys[node_id - 1]] for node_id in path]
+        for idx, path in enumerate(paths):
+            path_coords = [nodes[sorted_keys[node_id - 1]] for node_id in path]
 
-        # 生成路径线段
-        path_x, path_y, path_z = [], [], []
-        for i in range(len(path_coords) - 1):
-            start = path_coords[i]
-            end = path_coords[i + 1]
-            path_x += [start[0], end[0], None]
-            path_y += [start[1], end[1], None]
-            path_z += [start[2], end[2], None]
+            # 生成路径线段
+            path_x, path_y, path_z = [], [], []
+            for i in range(len(path_coords) - 1):
+                start = path_coords[i]
+                end = path_coords[i + 1]
+                path_x += [start[0], end[0], None]
+                path_y += [start[1], end[1], None]
+                path_z += [start[2], end[2], None]
 
-        path_trace = go.Scatter3d(
-            x=path_x,
-            y=path_y,
-            z=path_z,
-            mode='lines',
-            line=dict(
-                color='red',
-                width=6
-            ),
-            name='A* Path'
-        )
-        line_traces.append(path_trace)
+            path_trace = go.Scatter3d(
+                x=path_x,
+                y=path_y,
+                z=path_z,
+                mode='lines',
+                line=dict(
+                    color=path_colors[idx % len(path_colors)],  # 使用不同的颜色 取余
+                    width=6
+                ),
+                name=f'Path {idx + 1}'
+            )
+            line_traces.append(path_trace)
+
+            print(f"plot path {idx + 1}: {path}")
 
     # 合并图形
     fig = go.Figure(data=[node_trace, device_trace] + line_traces)
