@@ -15,7 +15,7 @@ class Edge:
     def __init__(self, to, c, d, next_edge):
         self.to = to        # 目标节点编号
         self.c = c          # 边容量
-        self.d = d          # 边距离（新增属性）
+        self.d = d          # 边距离
         self.next = next_edge
 
 class Graph:
