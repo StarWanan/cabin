@@ -1,4 +1,3 @@
 # source cabin_env/bin/activate
-export $PYTHONPATH=/Users/bytedance/WorkSpace/SmartLab/
-cd ..
-python src/vis/vis.py
+export PYTHONPATH=/Users/bytedance/WorkSpace/SmartLab
+python src/Algorithm/Astar.py
