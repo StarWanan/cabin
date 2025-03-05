@@ -4,5 +4,5 @@
 export PYTHONPATH="/Users/bytedance/WorkSpace/SmartLab/cabin/src:$PYTHONPATH"
 
 
-python -m Algorithm.main
+python -m Algorithm.main > output.txt
 
