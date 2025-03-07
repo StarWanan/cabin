@@ -1,6 +1,5 @@
 import heapq
 import math
-from ..graph.structure import Graph
 
 def a_star_route(graph, start_node, end_node):
     """A*算法实现路径规划"""
