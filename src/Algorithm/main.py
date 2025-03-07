@@ -6,13 +6,13 @@ from cabin.src.data import (
 from cabin.src.data.device import device  # 直接导入设备字典
 
 from cabin.src.vis.vis import remove_duplicate_nodes
-from Algorithm.graph import build_graph
-from Algorithm.routing import (
+from cabin.src.Algorithm.graph import build_graph
+from cabin.src.Algorithm.routing import (
     a_star_route,
     get_coordinates,
     update_edge_real_capacity
 )
-from Algorithm.routing.optimizer import optimize_capacity
+from cabin.src.Algorithm.routing.optimizer import optimize_capacity
 
 # 合并各层节点/连接的导入
 def load_network_data():
