@@ -1,11 +1,12 @@
-import math  # 添加缺失的数学模块导入
+import math
 
 class Edge:
-    def __init__(self, to, c, d, next_edge):
-        self.to = to        # 目标节点编号
-        self.c = c          # 边容量
-        self.d = d          # 边距离
-        self.real_c = 0  # 边目前实际容量
+    def __init__(self, from_node, to, c, d, next_edge):
+        self.from_node = from_node  # 起始节点编号
+        self.to = to                # 目标节点编号
+        self.c = c                  # 边容量
+        self.d = d                  # 边距离
+        self.real_c = 0             # 边目前实际容量
         self.next = next_edge
 
 class Graph:
@@ -21,12 +22,12 @@ class Graph:
         """添加有向边并自动计算距离"""
         u_coord = self.nodes[u]
         v_coord = self.nodes[v]
-        distance = math.sqrt(  # 这里使用了 math 模块
+        distance = math.sqrt(
             (u_coord[0]-v_coord[0])**2 + 
             (u_coord[1]-v_coord[1])**2 + 
             (u_coord[2]-v_coord[2])**2
         )
-        self.edges.append(Edge(v, c, distance, self.head[u]))
+        self.edges.append(Edge(u, v, c, distance, self.head[u]))
         self.head[u] = len(self.edges) - 1
 
     def add_bidirectional_edge(self, u, v, c):

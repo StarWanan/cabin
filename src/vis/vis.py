@@ -1,4 +1,3 @@
-import plotly.graph_objects as go
 from cabin.src.data.layer1 import nodes as nodes1, connections as connections1
 from cabin.src.data.layer2 import nodes as nodes2, connections as connections2
 from cabin.src.data.layer3 import nodes as nodes3, connections as connections3
@@ -123,7 +122,7 @@ def visualize_graph(nodes, connections, device, paths=None):
             )
             line_traces.append(path_trace)
 
-            print(f"plot path {idx + 1}: {path}")
+            # print(f"plot path {idx + 1}: {path}")
 
     # 合并图形
     fig = go.Figure(data=[node_trace, device_trace] + line_traces)
