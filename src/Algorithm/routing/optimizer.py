@@ -1,5 +1,6 @@
 import copy
-from . import a_star_route
+from .a_star import a_star_route
+from .path_utils import update_edge_real_capacity, get_edge_nodes
 
 def optimize_capacity(graph, routing_results, max_no_improve=50):
     """带目标函数的容量优化器"""
@@ -9,7 +10,6 @@ def optimize_capacity(graph, routing_results, max_no_improve=50):
     
     history = []
     iteration = 0
-    overload_edges = set()
     
     # 已超限边
     overload_edges = {edge.to: edge for edge in graph.edges if edge.real_c > edge.c}
@@ -27,15 +27,11 @@ def optimize_capacity(graph, routing_results, max_no_improve=50):
         current_overload = new_overload
         # 终止条件判断
         if current_overload == 0:
-            print(f"✅ 总超载量归零 @ iteration {iteration}")
+            print(f"\n✅总超载量归零 @ iteration {iteration}")
             break
         if len(history) > max_no_improve and (min(history[-max_no_improve:]) >= current_overload):
-            print(f"⛔ 连续{max_no_improve}次无改进")
+            print(f"\n⛔连续{max_no_improve}次无改进")
             break
-
-        # # 没有过载边
-        # if not overload_edges:
-        #     break
             
         for result in routing_results:
             if needs_optimization(result['path_nodes'], overload_edges):
@@ -56,18 +52,18 @@ def optimize_capacity(graph, routing_results, max_no_improve=50):
     analyze_overload_results(graph, routing_results)
     return routing_results
 
-
 def analyze_overload_results(graph, routing_results):
     """分析并打印超载边及其路径"""
-    overload_edges = {e.to: e for e in graph.edges if e.real_c > e.c}
+    overload_edges = {i: e for i, e in enumerate(graph.edges) if e.real_c > e.c}
     if not overload_edges:
         print("\n所有线路容量正常")
         return
     
     print("\n超载线路报告:")
     # 打印超载边
-    for to, edge in overload_edges.items():
-        print(f"边 {to}: 容量 {edge.c} -> 使用量 {edge.real_c} (超载 {edge.real_c - edge.c})")
+    for edge_index, edge in overload_edges.items():
+        from_node, to_node = get_edge_nodes(graph, edge_index)
+        print(f"边 {edge_index} ({from_node} -> {to_node}): 容量 {edge.c} -> 使用量 {edge.real_c} (超载 {edge.real_c - edge.c})")
     
     # 查找涉及超载边的路径
     print("\n涉及超载边的路径:")
@@ -77,24 +73,27 @@ def analyze_overload_results(graph, routing_results):
         overload_segments = find_overload_segments(graph, path, overload_edges)
         
         if overload_segments:
-            print(f"路径: {'->'.join(map(str, path))}")
-            print(f"设备: {result['connection']['device1']} -> {result['connection']['device2']}")
-            print(f"负载率: {load}, 涉及超载边: {overload_segments}")
+            print(f"设备: {result['connection']['device1']} -> {result['connection']['device2']}, 负载率: {load}, 涉及超载边: {overload_segments}")
 
 def find_overload_segments(graph, path, overload_edges):
-    """找出路径中的超载边"""
+    """找出路径中的超载边并返回包含节点坐标的信息"""
     segments = []
-    for i in range(len(path)-1):
+    for i in range(len(path) - 1):
         current = path[i]
-        next_node = path[i+1]
+        next_node = path[i + 1]
         edge_idx = graph.head[current]
         while edge_idx != -1:
             edge = graph.edges[edge_idx]
-            if edge.to == next_node and edge.to in overload_edges:
-                segments.append(f"{current}->{next_node}")
+            if edge.to == next_node and edge_idx in overload_edges:
+                current_coord = graph.nodes[current]
+                next_coord = graph.nodes[next_node]
+                segments.append({
+                    "segment": f"{current}->{next_node}",
+                    "current_coord": current_coord,
+                    "next_coord": next_coord
+                })
             edge_idx = edge.next
     return segments
-
 
 def build_reverse_edge_map(graph):
     """构建反向边映射表"""
@@ -131,7 +130,6 @@ def needs_optimization(path, overload_edges):
 def update_routing_result(graph, result, new_path, load_rate):
     """更新路由结果并调整容量"""
     # 回退旧路径容量
-    from .path_utils import update_edge_real_capacity
     update_edge_real_capacity(graph, result['path_nodes'], load_rate)
     
     # 应用新路径

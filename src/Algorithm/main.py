@@ -1,9 +1,9 @@
-from cabin.src.vis.vis import remove_duplicate_nodes, visualize_graph  
+from cabin.src.vis.vis import visualize_graph
 from cabin.src.data import (
     layer1, layer2, layer3, layer4,
     hub, device_connection
 )
-from cabin.src.data.device import device  # 直接导入设备字典
+from cabin.src.data.device import device
 
 from cabin.src.vis.vis import remove_duplicate_nodes
 from cabin.src.Algorithm.graph import build_graph
@@ -14,6 +14,9 @@ from cabin.src.Algorithm.routing import (
 )
 from cabin.src.Algorithm.routing.optimizer import optimize_capacity
 
+
+LINE_CAPACITY = 100
+
 # 合并各层节点/连接的导入
 def load_network_data():
     """统一加载所有网络层数据"""
@@ -23,9 +26,6 @@ def load_network_data():
                   layer3.connections + layer4.connections +
                   hub.connections)
     return nodes, connections
-
-LINE_CAPACITY = 100
-
 
 def initialize_network():
     """初始化网络拓扑结构"""
@@ -67,10 +67,10 @@ def process_single_connection(graph, conn, paths):
 
 def print_path_details(graph, path):
     """打印路径详细信息"""
-    print(f"Path: {' -> '.join(map(str, path))}")
+    # print(f"Path: {' -> '.join(map(str, path))}")
     coordinates = get_coordinates(graph, path)
     coordinates_str = ' -> '.join(map(str, coordinates))
-    print(f"Coordinates: {coordinates_str}")
+    print(f"Path coordinates: {coordinates_str}")
 
 def print_capacity_report(graph):
     """生成容量统计报告"""
@@ -103,6 +103,7 @@ def calculate_total_cable_length(graph, routing_results):
     return total_length
 
 def main():
+    # step 1：环境初始化
     # 初始化网络
     nodes, connections = initialize_network()
     graph = build_graph(nodes, connections, LINE_CAPACITY)
@@ -111,19 +112,21 @@ def main():
     device_connections = device_connection.generate_device_connections(
         seed=42, num_pairs=10
     )
-    
+
+    # step 2：初始化路径
     # 处理所有连接
     routing_results = []
     paths = []
     for conn in device_connections:
         result = process_single_connection(graph, conn, paths)
         routing_results.append(result)
-    
-    optimized_results = optimize_capacity(graph, routing_results)
-    
+
+    # step 3：启发式优化
+    optimize_capacity(graph, routing_results)
+
+    # step 4: 输出结果与可视化
     final_overload = sum(max(e.real_c - e.c, 0) for e in graph.edges)
     print(f"\n最终状态: 总超载量={final_overload}")
-
     print_capacity_report(graph)
     
     # 总线长计算

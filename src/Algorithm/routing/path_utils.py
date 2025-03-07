@@ -1,4 +1,5 @@
 def get_coordinates(graph, node_list):
+    """根据path的节点编号返回坐标"""
     coordinates = []
     for node in node_list:
         if 1 <= node < len(graph.nodes):
@@ -6,6 +7,15 @@ def get_coordinates(graph, node_list):
         else:
             coordinates.append(None)  # 如果节点编号无效，返回None
     return coordinates
+
+def get_edge_nodes(graph, edge_index):
+    """
+    根据边的编号返回这条边连接的两个节点
+    """
+    if 0 <= edge_index < len(graph.edges):
+        edge = graph.edges[edge_index]
+        return graph.nodes[edge.from_node], graph.nodes[edge.to]
+    return None
 
 def update_edge_real_capacity(graph, path, load_rate):
     """更新路径上所有边的实际容量"""
