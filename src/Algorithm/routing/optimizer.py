@@ -1,54 +1,76 @@
 import copy
 from .a_star import a_star_route
-from .path_utils import update_edge_real_capacity, get_edge_nodes
+from .path_utils import update_edge_real_capacity, get_edge_nodes, calculate_total_cable_length
 
-def optimize_capacity(graph, routing_results, max_no_improve=50):
+
+def optimize_capacity(graph, routing_results, max_no_improve=50, initial_alpha=1.0, alpha_decay=0.9):
     """带目标函数的容量优化器"""
+
     # 目标函数 - 总超载量
     def calculate_total_overload():
         return sum(max(e.real_c - e.c, 0) for e in graph.edges)
-    
-    history = []
+
+    history_overload = []
+    history_cable_length = []
     iteration = 0
-    
+    alpha = initial_alpha
+
     # 已超限边
     overload_edges = {edge.to: edge for edge in graph.edges if edge.real_c > edge.c}
     # 反向边映射表生成
     reverse_edge_map = build_reverse_edge_map(graph)
 
     current_overload = calculate_total_overload()
+    current_cable_length = calculate_total_cable_length(graph, routing_results)
+
     while True:
         new_overload = calculate_total_overload()
+        new_cable_length = calculate_total_cable_length(graph, routing_results)
+
+        aim1 = new_overload
+        aim2 = new_cable_length
+        current_aim = aim1 + alpha * aim2
+
         if current_overload == new_overload:
-            history.append(current_overload)
+            history_overload.append(current_overload)
         else:
-            history.clear()
-        
+            history_overload.clear()
+
+        if current_cable_length == new_cable_length:
+            history_cable_length.append(current_cable_length)
+        else:
+            history_cable_length.clear()
+
         current_overload = new_overload
+        current_cable_length = new_cable_length
+
         # 终止条件判断
         if current_overload == 0:
-            print(f"\n✅总超载量归零 @ iteration {iteration}")
-            break
-        if len(history) > max_no_improve and (min(history[-max_no_improve:]) >= current_overload):
-            print(f"\n⛔连续{max_no_improve}次无改进")
-            break
-            
+            if len(history_cable_length) > max_no_improve:
+                print(f"\n✅总超载量归零且总线长连续{max_no_improve}次无改进 @ iteration {iteration}")
+                break
+        else:
+            if len(history_overload) > max_no_improve and (min(history_overload[-max_no_improve:]) >= current_overload):
+                print(f"\n⛔总超载量连续{max_no_improve}次无改进 @ iteration {iteration}")
+                break
+
         for result in routing_results:
             if needs_optimization(result['path_nodes'], overload_edges):
                 new_path = reroute_connection(
-                    graph, 
-                    result, 
+                    graph,
+                    result,
                     reverse_edge_map,
                     overload_edges
                 )
                 if validate_new_path(graph, new_path, result['connection']['load_rate']):
                     update_routing_result(graph, result, new_path, result['connection']['load_rate'])
-        
+
         # 更新超限边集合
         overload_edges = {edge.to: edge for edge in graph.edges if edge.real_c > edge.c}
-        
+
         iteration += 1
-    
+        alpha *= alpha_decay
+
     analyze_overload_results(graph, routing_results)
     return routing_results
 
