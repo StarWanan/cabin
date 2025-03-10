@@ -3,5 +3,6 @@
 /workspace.xml
 *.pyc
 __pycache__/
-.ideatest.dwg
+.idea
+test.dwg
 test.dxf
