@@ -23,9 +23,7 @@ def remove_duplicate_nodes(nodes, connections):
 
     return new_nodes, new_connections
 
-
-
-def visualize_graph(nodes, connections, device, paths=None):
+def visualize_graph(nodes, connections, device=None, paths=None):
     """可视化节点、连接、设备和路径"""
     import plotly.graph_objects as go
 
@@ -34,12 +32,6 @@ def visualize_graph(nodes, connections, device, paths=None):
     y_coords = [coord[1] for coord in nodes.values()]
     z_coords = [coord[2] for coord in nodes.values()]
     node_names = list(nodes.keys())
-
-    # 提取设备坐标
-    x_device = [coord[0] for coord in device.values()]
-    y_device = [coord[1] for coord in device.values()]
-    z_device = [coord[2] for coord in device.values()]
-    device_names = list(device.keys())
 
     # 创建 3D 散点图（节点）
     node_trace = go.Scatter3d(
@@ -56,23 +48,31 @@ def visualize_graph(nodes, connections, device, paths=None):
         textposition="top center"
     )
 
-    # 创建 3D 散点图（设备）
-    device_trace = go.Scatter3d(
-        x=x_device,
-        y=y_device,
-        z=z_device,
-        mode='markers+text',
-        marker=dict(
-            size=3,
-            color='orange',
-            opacity=0.8
-        ),
-        text=device_names,
-        textposition="top center"
-    )
+    traces = [node_trace]
+
+    # if device
+    if device:
+        x_device = [coord[0] for coord in device.values()]
+        y_device = [coord[1] for coord in device.values()]
+        z_device = [coord[2] for coord in device.values()]
+        device_names = list(device.keys())
+
+        device_trace = go.Scatter3d(
+            x=x_device,
+            y=y_device,
+            z=z_device,
+            mode='markers+text',
+            marker=dict(
+                size=3,
+                color='orange',
+                opacity=0.8
+            ),
+            text=device_names,
+            textposition="top center"
+        )
+        traces.append(device_trace)
 
     # 创建线缆连接
-    line_traces = []
     for start, end in connections:
         x_line = [nodes[start][0], nodes[end][0], None]
         y_line = [nodes[start][1], nodes[end][1], None]
@@ -88,7 +88,7 @@ def visualize_graph(nodes, connections, device, paths=None):
                 width=2
             )
         )
-        line_traces.append(line_trace)
+        traces.append(line_trace)
 
     path_colors = [
         'red', 'green', 'blue', 'purple', 'orange', 'brown', 'pink', 'gray', 'cyan', 'magenta'
@@ -120,12 +120,10 @@ def visualize_graph(nodes, connections, device, paths=None):
                 ),
                 name=f'Path {idx + 1}'
             )
-            line_traces.append(path_trace)
-
-            # print(f"plot path {idx + 1}: {path}")
+            traces.append(path_trace)
 
     # 合并图形
-    fig = go.Figure(data=[node_trace, device_trace] + line_traces)
+    fig = go.Figure(data=traces)
     fig.update_layout(
         scene=dict(
             xaxis_title='X Axis',

@@ -1,5 +1,8 @@
 import ezdxf
 
+from cabin.src.vis.vis import remove_duplicate_nodes, visualize_graph
+
+
 def read_dwg(file_path):
     # 读取DWG文件
     dwg = ezdxf.readfile(file_path)
@@ -35,6 +38,57 @@ def read_dwg(file_path):
         else:
             print(f"  未知实体类型或未处理的实体类型: {entity.dxftype()}")
 
+
+def extract_nodes_and_connections(file_path):
+    # 读取DWG文件
+    dwg = ezdxf.readfile(file_path)
+    # 获取模型空间
+    modelspace = dwg.modelspace()
+
+    nodes = {}
+    connections = []
+    node_counter = 1
+
+    def add_node(point):
+        nonlocal node_counter
+        node_name = f"P{node_counter}"
+        truncated_point = (int(point[0]), int(point[1]), int(point[2]))
+        nodes[node_name] = truncated_point
+        node_counter += 1
+        return node_name
+
+    for entity in modelspace:
+        if entity.dxftype() == 'LINE':
+            start_node = add_node(entity.dxf.start)
+            end_node = add_node(entity.dxf.end)
+            connections.append((start_node, end_node))
+        elif entity.dxftype() == 'LWPOLYLINE':
+            points = entity.get_points()
+            previous_node = None
+            for point in points:
+                current_node = add_node(point)
+                if previous_node:
+                    connections.append((previous_node, current_node))
+                previous_node = current_node
+        elif entity.dxftype() == 'POLYLINE':
+            vertices = [vertex.dxf.location for vertex in entity.vertices]
+            previous_node = None
+            for vertex in vertices:
+                current_node = add_node(vertex)
+                if previous_node:
+                    connections.append((previous_node, current_node))
+                previous_node = current_node
+
+    return nodes, connections
+
 if __name__ == "__main__":
     file_path = "../../../test.dxf"
-    read_dwg(file_path)
+    nodes, connections = extract_nodes_and_connections(file_path)
+    print("Nodes:")
+    for key, value in nodes.items():
+        print(f"{key}: {value}")
+    print("\nConnections:")
+    for connection in connections:
+        print(connection)
+    nodes, connections = remove_duplicate_nodes(nodes, connections)
+    # visualize_graph(nodes, connections)
