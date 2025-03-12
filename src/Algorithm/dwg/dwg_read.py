@@ -57,7 +57,13 @@ def extract_nodes_and_connections(file_path):
         node_counter += 1
         return node_name
 
+    # 添加图层过滤
+    TARGET_LAYER = "DM9_CABLETRAY"
+
     for entity in modelspace:
+        if entity.dxf.layer != TARGET_LAYER:
+            continue
+
         if entity.dxftype() == 'LINE':
             start_node = add_node(entity.dxf.start)
             end_node = add_node(entity.dxf.end)
