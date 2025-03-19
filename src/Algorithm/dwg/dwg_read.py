@@ -115,6 +115,39 @@ def extract_hubs(file_path, filter_y=150000):
 
     return hubs
 
+
+def is_point_on_horizontal_or_vertical_line(point, line_start, line_end):
+    """检查一个点是否在水平或垂直的线段上"""
+    x0, y0, z0 = point
+    x1, y1, z1 = line_start
+    x2, y2, z2 = line_end
+
+    # 检查是否在水平线段上
+    if y1 == y2 and y0 == y1:
+        return min(x1, x2) <= x0 <= max(x1, x2) and min(z1, z2) <= z0 <= max(z1, z2)
+
+    # 检查是否在垂直线段上
+    if x1 == x2 and x0 == x1:
+        return min(y1, y2) <= y0 <= max(y1, y2) and min(z1, z2) <= z0 <= max(z1, z2)
+
+    return False
+
+
+def filter_hubs_on_connections(nodes, connections, hubs):
+    filtered_hubs = {}
+
+    for hub_name, hub_point in hubs.items():
+        for connection in connections:
+            start_node, end_node = connection
+            line_start = nodes[start_node]
+            line_end = nodes[end_node]
+
+            if is_point_on_horizontal_or_vertical_line(hub_point, line_start, line_end):
+                filtered_hubs[hub_name] = hub_point
+                break
+
+    return filtered_hubs
+
 if __name__ == "__main__":
     file_path = "../../../test.dxf"
     nodes, connections = extract_nodes_and_connections(file_path)
@@ -128,7 +161,8 @@ if __name__ == "__main__":
     visualize_graph(nodes, connections)
 
     hubs = extract_hubs(file_path)
-    print("\nHubs:")
-    for key, value in hubs.items():
+    filtered_hubs = filter_hubs_on_connections(nodes, connections, hubs)
+    print("Filtered Hubs:")
+    for key, value in filtered_hubs.items():
         print(f"{key}: {value}")
 
