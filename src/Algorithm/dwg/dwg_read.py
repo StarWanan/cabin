@@ -39,7 +39,7 @@ def read_dwg(file_path):
             print(f"  未知实体类型或未处理的实体类型: {entity.dxftype()}")
 
 
-def extract_nodes_and_connections(file_path):
+def extract_nodes_and_connections(file_path, filter_y=150000):
     # 读取DWG文件
     dwg = ezdxf.readfile(file_path)
     # 获取模型空间
@@ -51,11 +51,13 @@ def extract_nodes_and_connections(file_path):
 
     def add_node(point):
         nonlocal node_counter
-        node_name = f"P{node_counter}"
-        truncated_point = (int(point[0]), int(point[1]), int(point[2]))
-        nodes[node_name] = truncated_point
-        node_counter += 1
-        return node_name
+        if point[1] < filter_y:
+            node_name = f"P{node_counter}"
+            truncated_point = (int(point[0]), int(point[1]), int(point[2]))
+            nodes[node_name] = truncated_point
+            node_counter += 1
+            return node_name
+        return None
 
     # 添加图层过滤
     TARGET_LAYER = "DM9_CABLETRAY"
@@ -67,27 +69,30 @@ def extract_nodes_and_connections(file_path):
         if entity.dxftype() == 'LINE':
             start_node = add_node(entity.dxf.start)
             end_node = add_node(entity.dxf.end)
-            connections.append((start_node, end_node))
+            if start_node and end_node:
+                connections.append((start_node, end_node))
         elif entity.dxftype() == 'LWPOLYLINE':
             points = entity.get_points()
             previous_node = None
             for point in points:
                 current_node = add_node(point)
-                if previous_node:
-                    connections.append((previous_node, current_node))
-                previous_node = current_node
+                if current_node:
+                    if previous_node:
+                        connections.append((previous_node, current_node))
+                    previous_node = current_node
         elif entity.dxftype() == 'POLYLINE':
             vertices = [vertex.dxf.location for vertex in entity.vertices]
             previous_node = None
             for vertex in vertices:
                 current_node = add_node(vertex)
-                if previous_node:
-                    connections.append((previous_node, current_node))
-                previous_node = current_node
+                if current_node:
+                    if previous_node:
+                        connections.append((previous_node, current_node))
+                    previous_node = current_node
 
     return nodes, connections
 
-def extract_hubs(file_path):
+def extract_hubs(file_path, filter_y=150000):
     dwg = ezdxf.readfile(file_path)
     modelspace = dwg.modelspace()
 
@@ -101,11 +106,12 @@ def extract_hubs(file_path):
             continue
 
         if entity.dxftype() == 'INSERT':
-            hub_name = f"hub_{hub_counter}"
             insert_point = entity.dxf.insert
-            truncated_point = (int(insert_point[0]), int(insert_point[1]), int(insert_point[2]))
-            hubs[hub_name] = truncated_point
-            hub_counter += 1
+            if insert_point[1] < filter_y:
+                hub_name = f"hub_{hub_counter}"
+                truncated_point = (int(insert_point[0]), int(insert_point[1]), int(insert_point[2]))
+                hubs[hub_name] = truncated_point
+                hub_counter += 1
 
     return hubs
 
