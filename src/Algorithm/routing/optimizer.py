@@ -15,8 +15,119 @@ def optimize_capacity(graph, routing_results, max_no_improve=50, initial_alpha=1
     iteration = 0
     alpha = initial_alpha
 
-    # 已超限边
-    overload_edges = {edge.to: edge for edge in graph.edges if edge.real_c > edge.c}
+    # 修改超限边判定逻辑（关键修改点）
+    edge_map = {(e.from_node, e.to): idx for idx, e in enumerate(graph.edges)}
+    overload_edges = {}
+    processed = set()
+    
+    for idx, edge in enumerate(graph.edges):
+        if idx in processed:
+            continue
+            
+        # 查找反向边
+        reverse_key = (edge.to, edge.from_node)
+        reverse_idx = edge_map.get(reverse_key, None)
+        
+        if reverse_idx is not None and reverse_idx != idx:
+            reverse_edge = graph.edges[reverse_idx]
+            processed.add(idx)
+            processed.add(reverse_idx)
+            # 合并双向边容量判断
+            total_c = edge.c + reverse_edge.c
+            total_real_c = edge.real_c + reverse_edge.real_c
+            if total_real_c > total_c:
+                overload_edges[idx] = edge
+                overload_edges[reverse_idx] = reverse_edge
+        else:
+            # 单向边独立判断
+            if edge.real_c > edge.c:
+                overload_edges[idx] = edge
+
+    # 生成用于路径检测的节点集合
+    overload_nodes = {edge.to for edge in overload_edges.values()}
+    # 反向边映射表生成
+    reverse_edge_map = build_reverse_edge_map(graph)
+
+    current_overload = calculate_total_overload()
+    current_cable_length = calculate_total_cable_length(graph, routing_results)
+
+    while True:
+        new_overload = calculate_total_overload()
+        new_cable_length = calculate_total_cable_length(graph, routing_results)
+
+        aim1 = new_overload
+        aim2 = new_cable_length
+        current_aim = aim1 + alpha * aim2
+
+        if current_overload == new_overload:
+            history_overload.append(current_overload)
+        else:
+            history_overload.clear()
+
+        if current_cable_length == new_cable_length:
+            history_cable_length.append(current_cable_length)
+        else:
+            history_cable_length.clear()
+
+        current_overload = new_overload
+        current_cable_length = new_cable_length
+
+        # 终止条件判断
+        if current_overload == 0:
+            if len(history_cable_length) > max_no_improve:
+                print(f"\n✅总超载量归零且总线长连续{max_no_improve}次无改进 @ iteration {iteration}")
+                break
+        else:
+            if len(history_overload) > max_no_improve and (min(history_overload[-max_no_improve:]) >= current_overload):
+                print(f"\n⛔总超载量连续{max_no_improve}次无改进 @ iteration {iteration}")
+                break
+
+        for result in routing_results:
+            if needs_optimization(result['path_nodes'], overload_edges):
+                new_path = reroute_connection(
+                    graph,
+                    result,
+                    reverse_edge_map,
+                    overload_edges
+                )
+                if validate_new_path(graph, new_path, result['connection']['load_rate']):
+                    update_routing_result(graph, result, new_path, result['connection']['load_rate'])
+
+        # 更新超限边集合
+        # 错误：恢复旧判定方式 ↓
+        # overload_edges = {edge.to: edge for edge in graph.edges if edge.real_c > edge.c}
+        
+        # 正确：应保持双向边合并判定 ↓
+        # 重新生成 edge_map 和 overload_edges（与初始判定逻辑一致）
+        edge_map = {(e.from_node, e.to): idx for idx, e in enumerate(graph.edges)}
+        overload_edges = {}
+        processed = set()
+        
+        for idx, edge in enumerate(graph.edges):
+            if idx in processed:
+                continue
+                
+            # 查找反向边
+            reverse_key = (edge.to, edge.from_node)
+            reverse_idx = edge_map.get(reverse_key, None)
+            
+            if reverse_idx is not None and reverse_idx != idx:
+                reverse_edge = graph.edges[reverse_idx]
+                processed.add(idx)
+                processed.add(reverse_idx)
+                # 合并双向边容量判断
+                total_c = edge.c + reverse_edge.c
+                total_real_c = edge.real_c + reverse_edge.real_c
+                if total_real_c > total_c:
+                    overload_edges[idx] = edge
+                    overload_edges[reverse_idx] = reverse_edge
+            else:
+                # 单向边独立判断
+                if edge.real_c > edge.c:
+                    overload_edges[idx] = edge
+
+    # 生成用于路径检测的节点集合
+    overload_nodes = {edge.to for edge in overload_edges.values()}
     # 反向边映射表生成
     reverse_edge_map = build_reverse_edge_map(graph)
 
@@ -76,7 +187,27 @@ def optimize_capacity(graph, routing_results, max_no_improve=50, initial_alpha=1
 
 def analyze_overload_results(graph, routing_results):
     """分析并打印超载边及其路径"""
-    overload_edges = {i: e for i, e in enumerate(graph.edges) if e.real_c > e.c}
+    # 旧错误逻辑 ↓
+    # overload_edges = {i: e for i, e in enumerate(graph.edges) if e.real_c > e.c}
+    
+    # 新正确逻辑 ↓
+    edge_map = {(e.from_node, e.to): idx for idx, e in enumerate(graph.edges)}
+    overload_pairs = set()
+    overload_edges = {}
+    
+    for idx, edge in enumerate(graph.edges):
+        reverse_idx = edge_map.get((edge.to, edge.from_node), -1)
+        if reverse_idx != -1 and reverse_idx not in overload_pairs:
+            reverse_edge = graph.edges[reverse_idx]
+            total_real = edge.real_c + reverse_edge.real_c
+            if total_real > (edge.c + reverse_edge.c):
+                overload_edges[idx] = edge
+                overload_edges[reverse_idx] = reverse_edge
+                overload_pairs.add(idx)
+                overload_pairs.add(reverse_idx)
+        elif idx not in overload_pairs:
+            if edge.real_c > edge.c:
+                overload_edges[idx] = edge
     if not overload_edges:
         print("\n所有线路容量正常")
         return
@@ -145,9 +276,9 @@ def reroute_connection(graph, original_result, reverse_edge_map, forbidden_edges
     return new_path or original_result['path_nodes']
 
 
-def needs_optimization(path, overload_edges):
-    """判断路径是否需要优化"""
-    return any(node in overload_edges for node in path)
+def needs_optimization(path, overload_nodes):
+    """判断逻辑，检查路径是否经过超限节点"""
+    return any(node in overload_nodes for node in path)
 
 def update_routing_result(graph, result, new_path, load_rate):
     """更新路由结果并调整容量"""

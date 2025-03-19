@@ -15,7 +15,6 @@ def build_graph(nodes, connections, line_capacity):  # 添加 line_capacity 参�
     node_index_map = {key: idx + 1 for idx, key in enumerate(sorted(nodes.keys()))}
 
     for u, v in connections:
-        # 使用参数传入的 line_capacity 代替硬编码常量
         graph.add_bidirectional_edge(node_index_map[u], node_index_map[v], line_capacity)
 
     return graph
@@ -96,7 +95,8 @@ def process_single_connection(graph, conn, paths):
     if path:
         print_path_details(graph, path)
         paths.append(path)
-        update_edge_real_capacity(graph, path, conn["load_rate"])
+        # 错误容量更新 ↓ 提前更新容量，与优化器中 `update_routing_result` 的回退逻辑冲突
+        # update_edge_real_capacity(graph, path, conn["load_rate"])
     else:
         print("No valid path found")
 
