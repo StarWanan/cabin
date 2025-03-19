@@ -87,14 +87,42 @@ def extract_nodes_and_connections(file_path):
 
     return nodes, connections
 
+def extract_hubs(file_path):
+    dwg = ezdxf.readfile(file_path)
+    modelspace = dwg.modelspace()
+
+    hubs = {}
+    hub_counter = 1
+
+    TARGET_LAYER = "DM9_CABLETRAY_VERTICAL"
+
+    for entity in modelspace:
+        if entity.dxf.layer != TARGET_LAYER:
+            continue
+
+        if entity.dxftype() == 'INSERT':
+            hub_name = f"hub_{hub_counter}"
+            insert_point = entity.dxf.insert
+            truncated_point = (int(insert_point[0]), int(insert_point[1]), int(insert_point[2]))
+            hubs[hub_name] = truncated_point
+            hub_counter += 1
+
+    return hubs
+
 if __name__ == "__main__":
     file_path = "../../../test.dxf"
     nodes, connections = extract_nodes_and_connections(file_path)
+    nodes, connections = remove_duplicate_nodes(nodes, connections)
     print("Nodes:")
     for key, value in nodes.items():
         print(f"{key}: {value}")
     print("\nConnections:")
     for connection in connections:
         print(connection)
-    nodes, connections = remove_duplicate_nodes(nodes, connections)
-    # visualize_graph(nodes, connections)
+    visualize_graph(nodes, connections)
+
+    hubs = extract_hubs(file_path)
+    print("\nHubs:")
+    for key, value in hubs.items():
+        print(f"{key}: {value}")
+
