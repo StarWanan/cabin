@@ -25,7 +25,8 @@ def main():
         routing_results.append(result)
 
     # step 3：启发式优化
-    optimize_capacity(graph, routing_results)
+    optimized_results = optimize_capacity(graph, routing_results)
+    routing_results = optimized_results
 
     # step 4: 输出结果与可视化
     final_overload = sum(max(e.real_c - e.c, 0) for e in graph.edges)

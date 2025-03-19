@@ -2,8 +2,7 @@ import heapq
 import math
 
 def a_star_route(graph, start_node, end_node):
-    """A*算法实现路径规划"""
-    # 启发函数：欧氏距离估计
+    # 启发函数：欧氏距离
     def heuristic(a):
         a_coord = graph.nodes[a]
         b_coord = graph.nodes[end_node]
@@ -38,7 +37,13 @@ def a_star_route(graph, start_node, end_node):
         edge_idx = graph.head[current_node]
         while edge_idx != -1:
             edge = graph.edges[edge_idx]
-                
+            
+            # 添加容量约束检查
+            remaining_capacity = edge.c - edge.real_c
+            if remaining_capacity <= 0:
+                edge_idx = edge.next
+                continue  # 跳过已满载的边
+   
             neighbor = edge.to
             new_g = current_g + edge.d
             
