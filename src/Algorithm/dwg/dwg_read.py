@@ -39,7 +39,7 @@ def read_dwg(file_path):
             print(f"  未知实体类型或未处理的实体类型: {entity.dxftype()}")
 
 
-def extract_nodes_and_connections(file_path, filter_y=150000):
+def extract_nodes_and_connections(file_path, filter_y=50000):
     # 读取DWG文件
     dwg = ezdxf.readfile(file_path)
     # 获取模型空间
@@ -92,7 +92,7 @@ def extract_nodes_and_connections(file_path, filter_y=150000):
 
     return nodes, connections
 
-def extract_hubs(file_path, filter_y=150000):
+def extract_hubs(file_path, filter_y=50000):
     dwg = ezdxf.readfile(file_path)
     modelspace = dwg.modelspace()
 
@@ -148,6 +148,17 @@ def filter_hubs_on_connections(nodes, connections, hubs):
 
     return filtered_hubs
 
+def remove_duplicate_hubs(hubs):
+    value_to_key = {}
+    new_hubs = {}
+    for key, value in hubs.items():
+        if value not in value_to_key:
+            value_to_key[value] = key
+            new_hubs[key] = value
+
+    return new_hubs
+
+
 if __name__ == "__main__":
     file_path = "../../../test.dxf"
     nodes, connections = extract_nodes_and_connections(file_path)
@@ -161,6 +172,7 @@ if __name__ == "__main__":
     visualize_graph(nodes, connections)
 
     hubs = extract_hubs(file_path)
+    hubs = remove_duplicate_hubs(hubs)
     filtered_hubs = filter_hubs_on_connections(nodes, connections, hubs)
     print("Filtered Hubs:")
     for key, value in filtered_hubs.items():
