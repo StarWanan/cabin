@@ -8,14 +8,13 @@ from cabin.src.vis.vis import remove_duplicate_nodes
 from .a_star import a_star_route
 
 
-def build_graph(nodes, connections, line_capacity):  # 添加 line_capacity 参数
+def build_graph(nodes, connections, line_capacity):  
     """根据nodes和connections建立图"""
     node_list = [(0, 0, 0)] + [nodes[key] for key in sorted(nodes.keys())]
     graph = Graph(node_list)
     node_index_map = {key: idx + 1 for idx, key in enumerate(sorted(nodes.keys()))}
 
     for u, v in connections:
-        # 使用参数传入的 line_capacity 代替硬编码常量
         graph.add_bidirectional_edge(node_index_map[u], node_index_map[v], line_capacity)
 
     return graph
@@ -39,18 +38,28 @@ def get_edge_nodes(graph, edge_index):
         return graph.nodes[edge.from_node], graph.nodes[edge.to]
     return None
 
-def update_edge_real_capacity(graph, path, load_rate):
-    """更新路径上所有边的实际容量"""
+def update_edge_real_capacity(graph, path, load_rate, is_add=True):
+    """更新路径上所有边的实际容量（新增反向边处理）"""
+    sign = 1 if is_add else -1  # 标记是增加还是减少
     for i in range(len(path) - 1):
         current_node = path[i]
         next_node = path[i + 1]
+        
+        # 正向边
         edge_idx = graph.head[current_node]
         while edge_idx != -1:
             edge = graph.edges[edge_idx]
             if edge.to == next_node:
-                edge.real_c += load_rate
-                break
+                edge.real_c += sign * load_rate
             edge_idx = edge.next
+        
+        # 反向边
+        reverse_edge_idx = graph.head[next_node]
+        while reverse_edge_idx != -1:
+            reverse_edge = graph.edges[reverse_edge_idx]
+            if reverse_edge.to == current_node:
+                reverse_edge.real_c += sign * load_rate
+            reverse_edge_idx = reverse_edge.next
 
 
 def load_network_data():
@@ -69,7 +78,7 @@ def initialize_network():
     return remove_duplicate_nodes(nodes, connections)
 
 
-def process_single_connection(graph, conn, paths):
+def process_single_connection(graph, conn, paths, capacity=-1):
     """处理单个设备连接的路径计算"""
     dev1_coord = device[conn["device1"]]
     dev2_coord = device[conn["device2"]]
@@ -79,7 +88,7 @@ def process_single_connection(graph, conn, paths):
     end_node = graph.find_nearest_node(*dev2_coord)
 
     # 路径计算
-    path = a_star_route(graph, start_node, end_node) or []
+    path = a_star_route(graph, start_node, end_node, capacity=capacity) or []
     path = [path] if path and not isinstance(path, list) else path
 
     # 结果记录
@@ -91,11 +100,12 @@ def process_single_connection(graph, conn, paths):
     }
 
     # 输出结果
-    print(f"\nConnection: {conn['device1']} -> {conn['device2']}")
+    print(f"\nConnection: {conn['device1']}[{dev1_coord}] -> {conn['device2']}[{dev2_coord}]")
     print(f"Load rate: {conn['load_rate']}")
     if path:
         print_path_details(graph, path)
         paths.append(path)
+        # 更新边的容量
         update_edge_real_capacity(graph, path, conn["load_rate"])
     else:
         print("No valid path found")
@@ -105,7 +115,8 @@ def process_single_connection(graph, conn, paths):
 
 def print_path_details(graph, path):
     """打印路径详细信息"""
-    # print(f"Path: {' -> '.join(map(str, path))}")
+    # 新增节点编号路径显示
+    print(f"Path: {' -> '.join(map(str, path))}") 
     coordinates = get_coordinates(graph, path)
     coordinates_str = ' -> '.join(map(str, coordinates))
     print(f"Path coordinates: {coordinates_str}")
