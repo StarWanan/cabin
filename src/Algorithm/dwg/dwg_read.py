@@ -1,5 +1,5 @@
 import ezdxf
-
+import random
 from cabin.src.vis.vis import remove_duplicate_nodes, visualize_graph
 
 
@@ -158,23 +158,158 @@ def remove_duplicate_hubs(hubs):
 
     return new_hubs
 
+def update_z_coordinates(nodes, hubs, layer12=-200000, layer23=-135000, layer34=-90000, layer45=-40000):
+    def update_z(point):
+        x, y, z = point
+        if y < layer12:
+            new_z = 0
+        elif layer12 < y <= layer23:
+            new_z = 2525
+        elif layer23 < y <= layer34:
+            new_z = 2525 * 2
+        elif layer34 < y <= layer45:
+            new_z = 2525 * 3
+        else:
+            new_z = 2525 * 4
+        return (x, y, new_z)
+
+    updated_nodes = {key: update_z(value) for key, value in nodes.items()}
+    updated_hubs = {key: update_z(value) for key, value in hubs.items()}
+
+    return updated_nodes, updated_hubs
+
+
+def normalize_y_coordinates(nodes, hubs, layer12=-200000, layer23=-135000, layer34=-90000, layer45=-40000):
+    def get_layer(y):
+        if y < layer12:
+            return 1
+        elif layer12 < y <= layer23:
+            return 2
+        elif layer23 < y <= layer34:
+            return 3
+        elif layer34 < y <= layer45:
+            return 4
+        else:
+            return 5
+
+    def calculate_layer_center(layer_points):
+        min_y = min(layer_points)
+        max_y = max(layer_points)
+        return (min_y + max_y) / 2
+
+    layer_points = {1: [], 2: [], 3: [], 4: [], 5: []}
+    for point in nodes.values():
+        layer = get_layer(point[1])
+        layer_points[layer].append(point[1])
+    for point in hubs.values():
+        layer = get_layer(point[1])
+        layer_points[layer].append(point[1])
+
+    # 计算每一层的中心
+    layer_centers = {layer: calculate_layer_center(points) for layer, points in layer_points.items()}
+
+    # 计算总中心
+    total_center = sum(layer_centers.values()) / len(layer_centers)
+
+    def normalize_y(point):
+        x, y, z = point
+        layer = get_layer(y)
+        layer_center = layer_centers[layer]
+        normalized_y = y + (total_center - layer_center)
+        return (x, normalized_y, z)
+
+    normalized_nodes = {key: normalize_y(value) for key, value in nodes.items()}
+    normalized_hubs = {key: normalize_y(value) for key, value in hubs.items()}
+
+    return normalized_nodes, normalized_hubs
+
+def generate_hubs_connections(hubs):
+    connections = []
+    z_difference = 2525
+
+    hubs_list = list(hubs.items())
+    hubs_list.sort(key=lambda item: item[1])  # 按照坐标排序，便于查找
+
+    for i, (hub_name1, hub_point1) in enumerate(hubs_list):
+        for j in range(i + 1, len(hubs_list)):
+            hub_name2, hub_point2 = hubs_list[j]
+            if hub_point1[0] == hub_point2[0] and hub_point1[1] == hub_point2[1]:
+                if abs(hub_point1[2] - hub_point2[2]) == z_difference:
+                    connections.append((hub_name1, hub_name2))
+                elif hub_point1[2] + z_difference < hub_point2[2]:
+                    # 由于 hubs_list 是按 z 坐标排序的，如果 hub_point1 和 hub_point2 的 z 坐标差值超过 2525，
+                    # 则后续的 hub_point3, hub_point4, ... 的 z 坐标差值只会更大，可以提前终止内层循环
+                    break
+
+    return connections
+
+def generate_devices_and_connections(nodes, seed, layers=5, devices_per_layer=2, z_difference=2525):
+    random.seed(seed)
+
+    devices = {}
+    device_connections = []
+
+    # 将 nodes 按层分组
+    layer_nodes = {layer: [] for layer in range(1, layers + 1)}
+    for node_name, point in nodes.items():
+        x, y, z = point
+        layer = z // z_difference + 1
+        if layer in layer_nodes:
+            layer_nodes[layer].append(point)
+
+    # 生成设备
+    for layer in range(1, layers + 1):
+        for i in range(devices_per_layer):
+            if not layer_nodes[layer]:
+                raise ValueError(f"No nodes available for layer {layer}")
+            base_point = random.choice(layer_nodes[layer])
+            x, y, z = base_point
+            device_name = f"device_{layer}_{i+1}"
+            devices[device_name] = (x + 10000, y + 10000, z)
+
+    # 生成设备连接
+    for layer in range(1, layers + 1):
+        device1 = f"device_{layer}_1"
+        device2 = f"device_{layer}_2"
+        load_rate = random.choice([10, 20, 30, 40, 50])  # 随机选择负载率
+        device_connections.append({
+            "device1": device1,
+            "device2": device2,
+            "load_rate": load_rate
+        })
+
+    return devices, device_connections
+
+def dwg_api(file_path, seed=42):
+    nodes, connections = extract_nodes_and_connections(file_path)
+    nodes, connections = remove_duplicate_nodes(nodes, connections)
+
+    hubs = extract_hubs(file_path)
+    hubs = remove_duplicate_hubs(hubs)
+    filtered_hubs = filter_hubs_on_connections(nodes, connections, hubs)
+
+    updated_nodes, updated_hubs = update_z_coordinates(nodes, filtered_hubs)
+
+    normalized_nodes, normalized_hubs = normalize_y_coordinates(updated_nodes, updated_hubs)
+
+    devices, device_connections = generate_devices_and_connections(normalized_nodes, seed=seed)
+
+    return normalized_nodes, connections, devices, device_connections
+
 
 if __name__ == "__main__":
     file_path = "../../../test.dxf"
-    nodes, connections = extract_nodes_and_connections(file_path)
-    nodes, connections = remove_duplicate_nodes(nodes, connections)
-    print("Nodes:")
+    nodes, connections, devices, device_connections = dwg_api(file_path, seed=42)
+
+    print("\nNodes:")
     for key, value in nodes.items():
         print(f"{key}: {value}")
     print("\nConnections:")
     for connection in connections:
         print(connection)
-    visualize_graph(nodes, connections)
-
-    hubs = extract_hubs(file_path)
-    hubs = remove_duplicate_hubs(hubs)
-    filtered_hubs = filter_hubs_on_connections(nodes, connections, hubs)
-    print("Filtered Hubs:")
-    for key, value in filtered_hubs.items():
+    print("\nDevices:")
+    for key, value in devices.items():
         print(f"{key}: {value}")
-
+    print("\nDevice Connections:")
+    for connection in device_connections:
+        print(connection)
