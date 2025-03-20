@@ -1,6 +1,7 @@
 from cabin.src.Algorithm.routing.path_utils import *
 from cabin.src.Algorithm.routing.optimizer import *
 from cabin.src.vis.vis import visualize_graph
+from cabin.src.Algorithm.dwg.dwg_read import dwg_api
 
 LINE_CAPACITY = 500
 
@@ -8,19 +9,20 @@ LINE_CAPACITY = 500
 def main():
     # step 1：环境初始化
     # 初始化网络
-    nodes, connections = initialize_network()
+    # nodes, connections = initialize_network()
+    nodes, connections, device, device_connections = dwg_api(file_path="src/data/test.dxf")
     graph = build_graph(nodes, connections, LINE_CAPACITY)
     
     # 生成设备连接
-    device_connections = device_connection.generate_device_connections(
-        seed=42, num_pairs=10
-    )
+    # device_connections = device_connection.generate_device_connections(
+    #     seed=42, num_pairs=10
+    # )
 
     # step 2：初始化路径
     routing_results = []
     paths = []
     for conn in device_connections:
-        result = process_single_connection(graph, conn, paths, capacity=-1)
+        result = process_single_connection(graph, conn, device, paths, capacity=-1)
         routing_results.append(result)
 
     # step 3：局部搜索优化

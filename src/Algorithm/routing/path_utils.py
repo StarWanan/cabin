@@ -1,9 +1,9 @@
 from cabin.src.Algorithm.graph.structure import Graph
-from cabin.src.data import (
-    layer1, layer2, layer3, layer4,
-    hub, device_connection
-)
-from cabin.src.data.device import device
+# from cabin.src.data import (
+#     layer1, layer2, layer3, layer4,
+#     hub, device_connection
+# )
+# from cabin.src.data.device import device
 from cabin.src.vis.vis import remove_duplicate_nodes
 from .a_star import a_star_route
 
@@ -78,7 +78,7 @@ def initialize_network():
     return remove_duplicate_nodes(nodes, connections)
 
 
-def process_single_connection(graph, conn, paths, capacity=-1):
+def process_single_connection(graph, conn, device, paths, capacity=-1):
     """处理单个设备连接的路径计算"""
     dev1_coord = device[conn["device1"]]
     dev2_coord = device[conn["device2"]]
