@@ -298,7 +298,7 @@ def dwg_api(file_path, seed=42):
 
 
 if __name__ == "__main__":
-    file_path = "../../../test.dxf"
+    file_path = "src/data/test.dxf"
     nodes, connections, devices, device_connections = dwg_api(file_path, seed=42)
 
     print("\nNodes:")
