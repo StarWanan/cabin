@@ -16,5 +16,5 @@ connections = [
     ("hub_3", "hub_4"),
     ("hub_5", "hub_6"),
     ("hub_7", "hub_8"),
-    # ("hub_9", "hub_10"),
+    ("hub_9", "hub_10"),
 ]
