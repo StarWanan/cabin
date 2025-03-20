@@ -280,47 +280,33 @@ def generate_devices_and_connections(nodes, seed, layers=5, devices_per_layer=2,
 
     return devices, device_connections
 
-
-if __name__ == "__main__":
-    file_path = "../../../test.dxf"
+def dwg_api(file_path, seed=42):
     nodes, connections = extract_nodes_and_connections(file_path)
     nodes, connections = remove_duplicate_nodes(nodes, connections)
-    # print("Nodes:")
-    # for key, value in nodes.items():
-    #     print(f"{key}: {value}")
-    # print("\nConnections:")
-    # for connection in connections:
-    #     print(connection)
 
     hubs = extract_hubs(file_path)
     hubs = remove_duplicate_hubs(hubs)
     filtered_hubs = filter_hubs_on_connections(nodes, connections, hubs)
-    # print("Filtered Hubs:")
-    # for key, value in filtered_hubs.items():
-    #     print(f"{key}: {value}")
 
     updated_nodes, updated_hubs = update_z_coordinates(nodes, filtered_hubs)
-    # print("\nUpdated Nodes:")
-    # for key, value in updated_nodes.items():
-    #     print(f"{key}: {value}")
-    # print("\nUpdated Hubs:")
-    # for key, value in updated_hubs.items():
-    #     print(f"{key}: {value}")
 
     normalized_nodes, normalized_hubs = normalize_y_coordinates(updated_nodes, updated_hubs)
-    # print("Normalized Nodes:")
-    # for key, value in normalized_nodes.items():
-    #     print(f"{key}: {value}")
-    # print("\nNormalized Hubs:")
-    # for key, value in normalized_hubs.items():
-    #     print(f"{key}: {value}")
 
-    hubs_connections = generate_hubs_connections(normalized_hubs)
-    # print("\nHubs Connections:")
-    # for connection in hubs_connections:
-    #     print(connection)
+    devices, device_connections = generate_devices_and_connections(normalized_nodes, seed=seed)
 
-    devices, device_connections = generate_devices_and_connections(normalized_nodes, seed=42)
+    return normalized_nodes, connections, devices, device_connections
+
+
+if __name__ == "__main__":
+    file_path = "../../../test.dxf"
+    nodes, connections, devices, device_connections = dwg_api(file_path, seed=42)
+
+    print("\nNodes:")
+    for key, value in nodes.items():
+        print(f"{key}: {value}")
+    print("\nConnections:")
+    for connection in connections:
+        print(connection)
     print("\nDevices:")
     for key, value in devices.items():
         print(f"{key}: {value}")
