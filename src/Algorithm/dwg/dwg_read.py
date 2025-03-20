@@ -1,5 +1,5 @@
 import ezdxf
-
+import random
 from cabin.src.vis.vis import remove_duplicate_nodes, visualize_graph
 
 
@@ -243,6 +243,42 @@ def generate_hubs_connections(hubs):
 
     return connections
 
+def generate_devices_and_connections(nodes, seed, layers=5, devices_per_layer=2, z_difference=2525):
+    random.seed(seed)
+
+    devices = {}
+    device_connections = []
+
+    # 将 nodes 按层分组
+    layer_nodes = {layer: [] for layer in range(1, layers + 1)}
+    for node_name, point in nodes.items():
+        x, y, z = point
+        layer = z // z_difference + 1
+        if layer in layer_nodes:
+            layer_nodes[layer].append(point)
+
+    # 生成设备
+    for layer in range(1, layers + 1):
+        for i in range(devices_per_layer):
+            if not layer_nodes[layer]:
+                raise ValueError(f"No nodes available for layer {layer}")
+            base_point = random.choice(layer_nodes[layer])
+            x, y, z = base_point
+            device_name = f"device_{layer}_{i+1}"
+            devices[device_name] = (x + 10000, y + 10000, z)
+
+    # 生成设备连接
+    for layer in range(1, layers + 1):
+        device1 = f"device_{layer}_1"
+        device2 = f"device_{layer}_2"
+        load_rate = random.choice([10, 20, 30, 40, 50])  # 随机选择负载率
+        device_connections.append({
+            "device1": device1,
+            "device2": device2,
+            "load_rate": load_rate
+        })
+
+    return devices, device_connections
 
 
 if __name__ == "__main__":
@@ -275,12 +311,19 @@ if __name__ == "__main__":
     # print("Normalized Nodes:")
     # for key, value in normalized_nodes.items():
     #     print(f"{key}: {value}")
-    print("\nNormalized Hubs:")
-    for key, value in normalized_hubs.items():
-        print(f"{key}: {value}")
+    # print("\nNormalized Hubs:")
+    # for key, value in normalized_hubs.items():
+    #     print(f"{key}: {value}")
 
     hubs_connections = generate_hubs_connections(normalized_hubs)
     # print("\nHubs Connections:")
     # for connection in hubs_connections:
     #     print(connection)
 
+    devices, device_connections = generate_devices_and_connections(normalized_nodes, seed=42)
+    print("\nDevices:")
+    for key, value in devices.items():
+        print(f"{key}: {value}")
+    print("\nDevice Connections:")
+    for connection in device_connections:
+        print(connection)
