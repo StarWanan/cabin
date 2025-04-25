@@ -10,7 +10,7 @@ def main():
     # step 1：环境初始化
     # 初始化网络
     # nodes, connections = initialize_network()
-    nodes, connections, device, device_connections = dwg_api(file_path="src/data/test.dxf")
+    nodes, connections, device, device_connections = dwg_api(file_path="test.dxf")
     graph = build_graph(nodes, connections, LINE_CAPACITY)
     
     # 生成设备连接
