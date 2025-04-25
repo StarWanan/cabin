@@ -1,28 +1,47 @@
+from sympy import false
+
 from cabin.src.Algorithm.routing.path_utils import *
 from cabin.src.Algorithm.routing.optimizer import *
 from cabin.src.vis.vis import visualize_graph
 from cabin.src.Algorithm.dwg.dwg_read import dwg_api
 
 LINE_CAPACITY = 500
+MOCK_DATA = True
+TEST_DXF = False
 
 
 def main():
+    data_sources = {
+        "MOCK_DATA": MOCK_DATA,
+        "TEST_DXF": TEST_DXF,
+    }
+    active_sources = [name for name, is_active in data_sources.items() if is_active]
+    if len(active_sources) == 0:
+        raise ValueError("必须至少启用一个数据源！")
+    if len(active_sources) > 1:
+        raise ValueError(f"只能启用一个数据源，但目前多个数据源被启用：{', '.join(active_sources)}")
+
     # step 1：环境初始化
     # 初始化网络
-    # nodes, connections = initialize_network()
-    nodes, connections, device, device_connections = dwg_api(file_path="test.dxf")
+    if MOCK_DATA:
+        nodes, connections = initialize_network()
+        from cabin.src.data.device import device
+    if TEST_DXF:
+        nodes, connections, device, device_connections = dwg_api(file_path="../../test.dxf")
     graph = build_graph(nodes, connections, LINE_CAPACITY)
     
     # 生成设备连接
-    # device_connections = device_connection.generate_device_connections(
-    #     seed=42, num_pairs=10
-    # )
+    if MOCK_DATA:
+        from cabin.src.data import device_connection
+        device_connections = device_connection.generate_device_connections(
+            seed=42, num_pairs=10
+        )
 
     # step 2：初始化路径
     routing_results = []
     paths = []
     for conn in device_connections:
-        result = process_single_connection(graph, conn, device, paths, capacity=-1)
+        result = process_single_connection(graph, conn, paths, device, capacity=-1)
         routing_results.append(result)
 
     # step 3：局部搜索优化
@@ -41,38 +60,6 @@ def main():
         visualize_graph(nodes, connections, device, 
                        paths=[res['path_nodes'] for res in routing_results])
 
-    # ==========
-    # step 3：启发式优化
-    # optimized_results = optimize_capacity(graph, routing_results)
-    # routing_results = optimized_results
-
-    # step 4: 输出结果与可视化
-    # final_overload = sum(max(e.real_c - e.c, 0) for e in graph.edges)
-    # print(f"\n最终状态: 总超载量={final_overload}")
-    
-    # # 优化后的结果分析
-    # analyze_overload_results(graph, routing_results)
-    
-    # # 新增详细容量报告
-    # print_capacity_report(graph)  
-    
-    # 总线长计算
-    # total_length = calculate_total_cable_length(graph, routing_results)
-    # print(f"\n总线长统计: {total_length:.2f} ")
-    
-    # 可视化
-    # paths = []
-    # for res in routing_results:
-    #     conn = res['connection']
-    #     print(f"\nConnection: {conn['device1']} -> {conn['device2']}")
-    #     path = res['path_nodes']  
-    #     for node in path:
-    #         print(f"{node} ->", end="")
-    #     print("")
-    #     paths.append(path)
-    # visualize_graph(nodes, connections, device, paths=paths) 
-    
-    
 
 if __name__ == "__main__":
     main()
