@@ -7,15 +7,29 @@ from cabin.src.vis.vis import remove_duplicate_nodes
 from .a_star import a_star_route
 
 
-def build_graph(nodes, connections, line_capacity):  
+def build_graph(nodes, connections, line_capacity, custom_capacity=False, custom_capacities=None):
     """根据nodes和connections建立图"""
     node_list = [(0, 0, 0)] + [nodes[key] for key in sorted(nodes.keys())]
     graph = Graph(node_list)
     node_index_map = {key: idx + 1 for idx, key in enumerate(sorted(nodes.keys()))}
-
     for u, v in connections:
-        graph.add_bidirectional_edge(node_index_map[u], node_index_map[v], line_capacity)
-
+        u_idx = node_index_map[u]
+        v_idx = node_index_map[v]
+        if custom_capacity:
+            from cabin.src.data.custom_capacities import custom_capacities
+            # 检查用户是否提供了自定义容量
+            capacity = (
+                custom_capacities.get((u, v)) or
+                custom_capacities.get((v, u)) or
+                custom_capacities.get((u_idx, v_idx)) or
+                custom_capacities.get((v_idx, u_idx)) or
+                line_capacity
+            )
+        else:
+            # 使用默认容量
+            capacity = line_capacity
+        # 添加双向边
+        graph.add_bidirectional_edge(u_idx, v_idx, capacity)
     return graph
 
 def get_coordinates(graph, node_list):

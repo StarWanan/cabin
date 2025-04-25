@@ -1,5 +1,3 @@
-from sympy import false
-
 from cabin.src.Algorithm.routing.path_utils import *
 from cabin.src.Algorithm.routing.optimizer import *
 from cabin.src.vis.vis import visualize_graph
@@ -28,7 +26,7 @@ def main():
         from cabin.src.data.device import device
     if TEST_DXF:
         nodes, connections, device, device_connections = dwg_api(file_path="../../test.dxf")
-    graph = build_graph(nodes, connections, LINE_CAPACITY)
+    graph = build_graph(nodes, connections, LINE_CAPACITY, custom_capacity=True)
     
     # 生成设备连接
     if MOCK_DATA:
