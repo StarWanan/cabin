@@ -26,7 +26,7 @@ def real_data_api(directory_path="/Users/bytedance/pycharm/cabin/ExportDtas"):
         path = tunnel["path"]
         for i, point in enumerate(path):
             node_id = f"P{len(nodes) + 1}"  # 生成唯一节点 ID
-            nodes[node_id] = (point["point_x"], point["point_y"], point["point_z"])
+            nodes[node_id] = (int(point["point_x"]), int(point["point_y"]), int(point["point_z"]))
             if i > 0:  # 建立连接
                 prev_node_id = f"P{len(nodes) - 1}"
                 connections.append((prev_node_id, node_id))
@@ -35,7 +35,7 @@ def real_data_api(directory_path="/Users/bytedance/pycharm/cabin/ExportDtas"):
     devices = {}
     for equip in equis_data:
         device_id = equip["id"]
-        devices[device_id] = (equip["point_x"], equip["point_y"], equip["point_z"])
+        devices[device_id] = (int(equip["point_x"]), int(equip["point_y"]), int(equip["point_z"]))
 
     # 3. 获取 device_connections
     cable_radius_map = {cable["cable_id"]: cable["cable_radius"] for cable in cables_data}
@@ -56,7 +56,7 @@ def real_data_api(directory_path="/Users/bytedance/pycharm/cabin/ExportDtas"):
 if __name__ == "__main__":
     directory = "/Users/bytedance/pycharm/cabin/ExportDtas"
     nodes, connections, devices, device_connections = real_data_api(directory)
-    print("Nodes:", nodes)
-    print("Connections:", connections)
-    print("Devices:", devices)
-    print("Device Connections:", device_connections)
+    # print("Nodes:", nodes)
+    # print("Connections:", connections)
+    # print("Devices:", devices)
+    # print("Device Connections:", device_connections)
