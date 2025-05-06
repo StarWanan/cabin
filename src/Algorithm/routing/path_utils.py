@@ -93,6 +93,12 @@ def initialize_network():
 
 def process_single_connection(graph, conn, paths, device, capacity=-1):
     """处理单个设备连接的路径计算"""
+    # 检查设备是否存在于 device 字典中
+    if conn["device1"] not in device or conn["device2"] not in device:
+        print(f"Skipping connection: {conn['device1']} -> {conn['device2']} (devices not found)")
+        return None
+
+    # 获取设备坐标
     dev1_coord = device[conn["device1"]]
     dev2_coord = device[conn["device2"]]
 
@@ -124,6 +130,7 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
         print("No valid path found")
 
     return result
+
 
 
 def print_path_details(graph, path):
