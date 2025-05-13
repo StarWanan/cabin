@@ -82,6 +82,10 @@ def real_data_api(directory_path="/Users/bytedance/pycharm/cabin/ExportDtas"):
                         start_node_id = find_node_id_by_coordinates(start_coordinates)
                         end_node_id = find_node_id_by_coordinates(end_coordinates)
                         if start_node_id and end_node_id:
+                            # 移除原来的直接连接
+                            if (start_node_id, end_node_id) in connections:
+                                connections.remove((start_node_id, end_node_id))
+                            # 添加新的连接
                             connections.append((start_node_id, connected_node_id))
                             connections.append((connected_node_id, end_node_id))
                         break
