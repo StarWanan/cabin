@@ -22,14 +22,69 @@ def real_data_api(directory_path="/Users/bytedance/pycharm/cabin/ExportDtas"):
     # 1. 获取 nodes 和 connections
     nodes = {}
     connections = []
+
+    def find_node_id_by_coordinates(coordinates):
+        """根据坐标查找节点 ID，如果不存在则返回 None"""
+        for node_id, node_coords in nodes.items():
+            if node_coords == coordinates:
+                return node_id
+        return None
+
+    def are_coordinates_similar(coord1, coord2):
+        """判断两个坐标是否至少有两个维度一致"""
+        return sum(c1 == c2 for c1, c2 in zip(coord1, coord2)) >= 2
+
     for tunnel in tunnels_data:
         path = tunnel["path"]
+        connected_to = tunnel.get("connected_to", [])
+
+        # 处理 path 中的点
         for i, point in enumerate(path):
-            node_id = f"P{len(nodes) + 1}"  # 生成唯一节点 ID
-            nodes[node_id] = (int(point["point_x"]), int(point["point_y"]), int(point["point_z"]))
+            coordinates = (int(point["point_x"]), int(point["point_y"]), int(point["point_z"]))
+            node_id = find_node_id_by_coordinates(coordinates)
+            if not node_id:  # 如果节点不存在则创建
+                node_id = f"P{len(nodes) + 1}"
+                nodes[node_id] = coordinates
+
             if i > 0:  # 建立连接
-                prev_node_id = f"P{len(nodes) - 1}"
-                connections.append((prev_node_id, node_id))
+                prev_coordinates = (int(path[i - 1]["point_x"]), int(path[i - 1]["point_y"]), int(path[i - 1]["point_z"]))
+                prev_node_id = find_node_id_by_coordinates(prev_coordinates)
+                if prev_node_id and are_coordinates_similar(coordinates, prev_coordinates):
+                    connections.append((prev_node_id, node_id))
+
+        # 处理 connected_to 中的点
+        for connected_point in connected_to:
+            connected_coordinates = (
+                int(connected_point["point_x"]),
+                int(connected_point["point_y"]),
+                int(connected_point["point_z"])
+            )
+            connected_node_id = find_node_id_by_coordinates(connected_coordinates)
+            if not connected_node_id:  # 如果 connected_to 的点不存在于 nodes 中，则跳过
+                continue
+
+            # 确定插入位置
+            for j in range(len(path) - 1):
+                start_coordinates = (int(path[j]["point_x"]), int(path[j]["point_y"]), int(path[j]["point_z"]))
+                end_coordinates = (int(path[j + 1]["point_x"]), int(path[j + 1]["point_y"]), int(path[j + 1]["point_z"]))
+
+                if are_coordinates_similar(connected_coordinates, start_coordinates) and are_coordinates_similar(connected_coordinates, end_coordinates):
+                    if start_coordinates[0] <= connected_coordinates[0] <= end_coordinates[0] or \
+                       start_coordinates[1] <= connected_coordinates[1] <= end_coordinates[1] or \
+                       start_coordinates[2] <= connected_coordinates[2] <= end_coordinates[2]:
+                        # 插入 connected_point 到 path 中
+                        path.insert(j + 1, {
+                            "point_x": connected_point["point_x"],
+                            "point_y": connected_point["point_y"],
+                            "point_z": connected_point["point_z"]
+                        })
+                        # 更新连接
+                        start_node_id = find_node_id_by_coordinates(start_coordinates)
+                        end_node_id = find_node_id_by_coordinates(end_coordinates)
+                        if start_node_id and end_node_id:
+                            connections.append((start_node_id, connected_node_id))
+                            connections.append((connected_node_id, end_node_id))
+                        break
 
     # 2. 获取 devices
     devices = {}
