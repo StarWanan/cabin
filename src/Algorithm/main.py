@@ -49,7 +49,7 @@ def main():
 
         # 可视化结果
         visualize_graph(nodes, connections, device,
-                        paths=[res['path_nodes'] for res in routing_results])
+                        paths = [res['path_nodes'] for res in routing_results if res is not None and 'path_nodes' in res])
         return
 
     # step 2：初始化路径
