@@ -103,8 +103,11 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
     dev2_coord = device[conn["device2"]]
 
     # 节点定位
-    start_node = graph.find_nearest_node(*dev1_coord)
-    end_node = graph.find_nearest_node(*dev2_coord)
+    # start_node = graph.find_nearest_node(*dev1_coord)
+    # end_node = graph.find_nearest_node(*dev2_coord)
+
+    start_node = graph.find_nearest_node_any_z(*dev1_coord)
+    end_node = graph.find_nearest_node_any_z(*dev2_coord)
 
     # 路径计算
     path = a_star_route(graph, start_node, end_node, capacity=capacity) or []
@@ -115,7 +118,9 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
         "connection": conn,
         "path_nodes": path,
         "start_node": start_node,
-        "end_node": end_node
+        "end_node": end_node,
+        "device1_coord": dev1_coord,
+        "device2_coord": dev2_coord
     }
 
     # 输出结果

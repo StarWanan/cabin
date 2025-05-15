@@ -2,7 +2,7 @@ import json
 import os
 
 
-def real_data_api(directory_path="/Users/bytedance/pycharm/cabin/ExportDtas"):
+def real_data_api(directory_path="data/ExportDtas"):
     # 文件路径
     tunnels_file = os.path.join(directory_path, "Tunnels.json")
     equis_file = os.path.join(directory_path, "Equis.json")

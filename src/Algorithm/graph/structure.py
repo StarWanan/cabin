@@ -50,3 +50,20 @@ class Graph:
                     min_dist = dist
                     nearest = node_id
         return nearest
+
+    def find_nearest_node_any_z(self, x, y, z):
+        """根据坐标找最近节点（不限制z坐标），计算三维空间距离"""
+        min_dist = float('inf')
+        nearest = -1
+        for node_id in range(1, len(self.nodes)):
+            nx, ny, nz = self.nodes[node_id]
+            # 计算三维欧氏距离（包含z坐标差异）
+            dist = math.sqrt(
+                (nx - x) ** 2 +
+                (ny - y) ** 2 +
+                (nz - z) ** 2  # 新增z坐标差异计算
+            )
+            if dist < min_dist:
+                min_dist = dist
+                nearest = node_id
+        return nearest
