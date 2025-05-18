@@ -42,11 +42,23 @@ def main():
 
     if REAL_DATA:
         routing_results = []
-        paths_for_viz = [] # Renamed to avoid conflict if 'paths' is used elsewhere
+        paths_for_viz = []  # Renamed to avoid conflict if 'paths' is used elsewhere
+        none_count = 0  # 用于统计 result 为 None 的数量
+        total_connections = len(device_connections)  # 总连接数
+
         for conn in device_connections:
             result = process_single_connection(graph, conn, paths_for_viz, device, capacity=-1)
-            if result: #确保 result 不是 None
-                 routing_results.append(result)
+            if result:  # 确保 result 不是 None
+                routing_results.append(result)
+                if "path_nodes" in result:
+                    if not result["path_nodes"]:  # 如果 path 是空
+                        none_count += 1
+            else:
+                none_count += 1
+
+        # 计算 None 的占比
+        none_ratio = none_count / total_connections if total_connections > 0 else 0
+        print(f"Result 为 None 的数量：{none_count}，占比：{none_ratio:.2%}")
         
         extracted_paths = [
             # 补充起点和终点到路径中（避免重复检查：如果path_nodes已包含起点/终点则跳过）

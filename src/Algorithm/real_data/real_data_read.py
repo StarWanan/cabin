@@ -10,7 +10,7 @@ def load_data_from_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def real_data_api(directory_path="data/ExportDtas", reRead=True):
+def real_data_api(directory_path="data/ExportDtas", reRead=False):
     # 文件路径
     nodes_file = os.path.join(directory_path, "nodes.json")
     nodes_connections_file = os.path.join(directory_path, "nodes_connections.json")
