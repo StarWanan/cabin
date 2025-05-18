@@ -4,7 +4,8 @@ from cabin.src.data.layer3 import nodes as nodes3, connections as connections3
 from cabin.src.data.layer4 import nodes as nodes4, connections as connections4
 from cabin.src.data.hub import nodes as nodes_hub, connections as connections_hub
 from cabin.src.data.device import device
-import random 
+import random
+import os
 
 
 def remove_duplicate_nodes(nodes, connections):
@@ -104,7 +105,6 @@ def visualize_graph(nodes, connections, device=None, paths=None,
                 valid_sampled_connections.append((start_node_key, end_node_key))
     else: # 如果没有采样节点，则不显示任何连接
         valid_sampled_connections = []
-
 
     all_lines_x = []
     all_lines_y = []
@@ -216,6 +216,8 @@ def visualize_graph(nodes, connections, device=None, paths=None,
     # 新增：保存可视化结果到log目录（带时间戳）
     import datetime  # 新增导入
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")  # 生成时间戳（与log目录格式一致）
+    if not os.path.exists("log"):
+        os.makedirs("log")
     save_path = f"log/vis_{timestamp}.html"  # 保存路径
     fig.write_html(save_path)  # 保存为交互式HTML文件（保留交互功能）
     print(f"可视化结果已保存至：{save_path}")  # 控制台提示保存路径

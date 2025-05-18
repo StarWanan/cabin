@@ -10,10 +10,10 @@ def load_data_from_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def real_data_api(directory_path="data/ExportDtas", reRead=False):
+def real_data_api(directory_path="data/ExportDtas", reRead=True):
     # 文件路径
     nodes_file = os.path.join(directory_path, "nodes.json")
-    connections_file = os.path.join(directory_path, "connections.json")
+    nodes_connections_file = os.path.join(directory_path, "nodes_connections.json")
     devices_file = os.path.join(directory_path, "devices.json")
     device_connections_file = os.path.join(directory_path, "device_connections.json")
 
@@ -21,7 +21,7 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
     if not reRead:
         print("load_data_from_file")
         nodes = load_data_from_file(nodes_file)
-        connections = load_data_from_file(connections_file)
+        connections = load_data_from_file(nodes_connections_file)
         devices = load_data_from_file(devices_file)
         device_connections = load_data_from_file(device_connections_file)
         return nodes, connections, devices, device_connections
@@ -128,7 +128,7 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
         })
 
     save_data_to_file(nodes, nodes_file)
-    save_data_to_file(connections, connections_file)
+    save_data_to_file(connections, nodes_connections_file)
     save_data_to_file(devices, devices_file)
     save_data_to_file(device_connections, device_connections_file)
 
