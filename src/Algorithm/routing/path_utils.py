@@ -109,6 +109,9 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
     start_node = graph.find_nearest_node_any_z(*dev1_coord)
     end_node = graph.find_nearest_node_any_z(*dev2_coord)
 
+    start_node = graph.find_nearest_node_by_layer(*dev1_coord)
+    end_node = graph.find_nearest_node_by_layer(*dev2_coord)
+
     # 路径计算
     path = a_star_route(graph, start_node, end_node, capacity=capacity) or []
     path = [path] if path and not isinstance(path, list) else path
