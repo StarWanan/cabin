@@ -32,7 +32,7 @@ def main():
     elif REAL_DATA:
         nodes, connections, device, device_connections = real_data_api(directory_path="../data/ExportDtas")
 
-    graph = build_graph(nodes, connections, LINE_CAPACITY, custom_capacity=True)
+    graph = build_graph(nodes, connections, LINE_CAPACITY, custom_capacity=False)
 
     if MOCK_DATA:
          from cabin.src.data import device_connection
