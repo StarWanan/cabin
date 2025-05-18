@@ -18,7 +18,8 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
     device_connections_file = os.path.join(directory_path, "device_connections.json")
 
     # 检查是否需要重新读取数据
-    if not reRead and all(os.path.exists(file) for file in [nodes_file, connections_file, devices_file, device_connections_file]):
+    if not reRead:
+        print("load_data_from_file")
         nodes = load_data_from_file(nodes_file)
         connections = load_data_from_file(connections_file)
         devices = load_data_from_file(devices_file)
@@ -52,10 +53,6 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
                 return node_id
         return None
 
-    def are_coordinates_similar(coord1, coord2):
-        """判断两个坐标是否至少有两个维度一致"""
-        return sum(c1 == c2 for c1, c2 in zip(coord1, coord2)) >= 2
-
     for tunnel in tunnels_data:
         path = tunnel["path"]
         connected_to = tunnel.get("connected_to", [])
@@ -71,7 +68,7 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
             if i > 0:  # 建立连接
                 prev_coordinates = (int(path[i - 1]["point_x"]), int(path[i - 1]["point_y"]), int(path[i - 1]["point_z"]))
                 prev_node_id = find_node_id_by_coordinates(prev_coordinates)
-                if prev_node_id and are_coordinates_similar(coordinates, prev_coordinates):
+                if prev_node_id:
                     connections.append((prev_node_id, node_id))
 
         # 处理 connected_to 中的点
@@ -90,27 +87,26 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
                 start_coordinates = (int(path[j]["point_x"]), int(path[j]["point_y"]), int(path[j]["point_z"]))
                 end_coordinates = (int(path[j + 1]["point_x"]), int(path[j + 1]["point_y"]), int(path[j + 1]["point_z"]))
 
-                if are_coordinates_similar(connected_coordinates, start_coordinates) and are_coordinates_similar(connected_coordinates, end_coordinates):
-                    if start_coordinates[0] <= connected_coordinates[0] <= end_coordinates[0] or \
-                       start_coordinates[1] <= connected_coordinates[1] <= end_coordinates[1] or \
-                       start_coordinates[2] <= connected_coordinates[2] <= end_coordinates[2]:
-                        # 插入 connected_point 到 path 中
-                        path.insert(j + 1, {
-                            "point_x": connected_point["point_x"],
-                            "point_y": connected_point["point_y"],
-                            "point_z": connected_point["point_z"]
-                        })
-                        # 更新连接
-                        start_node_id = find_node_id_by_coordinates(start_coordinates)
-                        end_node_id = find_node_id_by_coordinates(end_coordinates)
-                        if start_node_id and end_node_id:
-                            # 移除原来的直接连接
-                            if (start_node_id, end_node_id) in connections:
-                                connections.remove((start_node_id, end_node_id))
-                            # 添加新的连接
-                            connections.append((start_node_id, connected_node_id))
-                            connections.append((connected_node_id, end_node_id))
-                        break
+                if start_coordinates[0] <= connected_coordinates[0] <= end_coordinates[0] or \
+                   start_coordinates[1] <= connected_coordinates[1] <= end_coordinates[1] or \
+                   start_coordinates[2] <= connected_coordinates[2] <= end_coordinates[2]:
+                    # 插入 connected_point 到 path 中
+                    path.insert(j + 1, {
+                        "point_x": connected_point["point_x"],
+                        "point_y": connected_point["point_y"],
+                        "point_z": connected_point["point_z"]
+                    })
+                    # 更新连接
+                    start_node_id = find_node_id_by_coordinates(start_coordinates)
+                    end_node_id = find_node_id_by_coordinates(end_coordinates)
+                    if start_node_id and end_node_id:
+                        # 移除原来的直接连接
+                        if (start_node_id, end_node_id) in connections:
+                            connections.remove((start_node_id, end_node_id))
+                        # 添加新的连接
+                        connections.append((start_node_id, connected_node_id))
+                        connections.append((connected_node_id, end_node_id))
+                    break
 
     # 2. 获取 devices
     devices = {}
@@ -130,13 +126,6 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
             "device2": device2,
             "load_rate": load_rate
         })
-
-    # 使用时间戳生成唯一文件名
-    timestamp = int(time.time())
-    nodes_file = os.path.join(directory_path, f"nodes_{timestamp}.json")
-    connections_file = os.path.join(directory_path, f"connections_{timestamp}.json")
-    devices_file = os.path.join(directory_path, f"devices_{timestamp}.json")
-    device_connections_file = os.path.join(directory_path, f"device_connections_{timestamp}.json")
 
     save_data_to_file(nodes, nodes_file)
     save_data_to_file(connections, connections_file)
