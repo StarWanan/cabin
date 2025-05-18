@@ -1,8 +1,30 @@
-import json
 import os
+import json
+import time
 
+def save_data_to_file(data, file_path):
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
-def real_data_api(directory_path="data/ExportDtas"):
+def load_data_from_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def real_data_api(directory_path="data/ExportDtas", reRead=False):
+    # 文件路径
+    nodes_file = os.path.join(directory_path, "nodes.json")
+    connections_file = os.path.join(directory_path, "connections.json")
+    devices_file = os.path.join(directory_path, "devices.json")
+    device_connections_file = os.path.join(directory_path, "device_connections.json")
+
+    # 检查是否需要重新读取数据
+    if not reRead and all(os.path.exists(file) for file in [nodes_file, connections_file, devices_file, device_connections_file]):
+        nodes = load_data_from_file(nodes_file)
+        connections = load_data_from_file(connections_file)
+        devices = load_data_from_file(devices_file)
+        device_connections = load_data_from_file(device_connections_file)
+        return nodes, connections, devices, device_connections
+
     # 文件路径
     tunnels_file = os.path.join(directory_path, "Tunnels.json")
     equis_file = os.path.join(directory_path, "Equis.json")
@@ -109,11 +131,23 @@ def real_data_api(directory_path="data/ExportDtas"):
             "load_rate": load_rate
         })
 
+    # 使用时间戳生成唯一文件名
+    timestamp = int(time.time())
+    nodes_file = os.path.join(directory_path, f"nodes_{timestamp}.json")
+    connections_file = os.path.join(directory_path, f"connections_{timestamp}.json")
+    devices_file = os.path.join(directory_path, f"devices_{timestamp}.json")
+    device_connections_file = os.path.join(directory_path, f"device_connections_{timestamp}.json")
+
+    save_data_to_file(nodes, nodes_file)
+    save_data_to_file(connections, connections_file)
+    save_data_to_file(devices, devices_file)
+    save_data_to_file(device_connections, device_connections_file)
+
     return nodes, connections, devices, device_connections
 
 
 if __name__ == "__main__":
-    directory = "/Users/bytedance/pycharm/cabin/ExportDtas"
+    directory = "../../data/ExportDtas"
     nodes, connections, devices, device_connections = real_data_api(directory)
     # print("Nodes:", nodes)
     # print("Connections:", connections)
