@@ -67,3 +67,41 @@ class Graph:
                 min_dist = dist
                 nearest = node_id
         return nearest
+
+    def find_nearest_node_by_layer(self, x, y, z):
+        """根据坐标找最近节点，只要z和要查找的z是同一层"""
+        # 定义每一层的z坐标范围
+        layers = [
+            (0, 1000),  # 第一层
+            (1000, 2900),  # 第二层
+            (2900, 4800),  # 第三层
+            (4800, 7500),  # 第四层
+            (7500, 10200),  # 第五层
+            (10200, 12700),  # 第六层
+            (12700, 15200),  # 第七层
+            (15200, 17800),  # 第八层
+            (17800, 20400)  # 第九层
+        ]
+
+        # 找到z所在的层
+        layer_index = -1
+        for i, (lower, upper) in enumerate(layers):
+            if lower <= z < upper:
+                layer_index = i
+                break
+
+        if layer_index == -1:
+            return -1  # 如果z不在任何层中，返回-1
+
+        min_dist = float('inf')
+        nearest = -1
+        for node_id in range(1, len(self.nodes)):
+            nx, ny, nz = self.nodes[node_id]
+            # 检查节点是否在同一层
+            if layers[layer_index][0] <= nz < layers[layer_index][1]:
+                dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2)
+                if dist < min_dist:
+                    min_dist = dist
+                    nearest = node_id
+
+        return nearest
