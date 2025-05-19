@@ -1,6 +1,5 @@
 import os
 import json
-import time
 
 def save_data_to_file(data, file_path):
     with open(file_path, "w", encoding="utf-8") as f:
@@ -9,6 +8,62 @@ def save_data_to_file(data, file_path):
 def load_data_from_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+def is_point_on_segment(start, end, point):
+    """判断点是否在线段上"""
+    # 计算方向向量
+    segment_vector = (end[0] - start[0], end[1] - start[1], end[2] - start[2])
+    point_vector = (point[0] - start[0], point[1] - start[1], point[2] - start[2])
+
+    # 计算向量的点积
+    dot_product = (segment_vector[0] * point_vector[0] +
+                   segment_vector[1] * point_vector[1] +
+                   segment_vector[2] * point_vector[2])
+
+    # 计算向量的长度
+    segment_length_squared = (segment_vector[0] ** 2 +
+                              segment_vector[1] ** 2 +
+                              segment_vector[2] ** 2)
+    point_length_squared = (point_vector[0] ** 2 +
+                            point_vector[1] ** 2 +
+                            point_vector[2] ** 2)
+
+    # 判断点是否在线段上
+    return dot_product >= 0 and dot_product <= segment_length_squared and \
+           point_length_squared <= segment_length_squared
+
+def insert_connected_points(path, connected_to):
+    """插入 connected_to 的点到 path 中"""
+    for connected_point in connected_to:
+        connected_coordinates = (
+            connected_point["point_x"],
+            connected_point["point_y"],
+            connected_point["point_z"]
+        )
+
+        # 找到插入位置
+        for j in range(len(path) - 1):
+            start_coordinates = (
+                path[j]["point_x"],
+                path[j]["point_y"],
+                path[j]["point_z"]
+            )
+            end_coordinates = (
+                path[j + 1]["point_x"],
+                path[j + 1]["point_y"],
+                path[j + 1]["point_z"]
+            )
+
+            if is_point_on_segment(start_coordinates, end_coordinates, connected_coordinates):
+                # 插入 connected_point 到 path 中
+                path.insert(j + 1, {
+                    "point_x": connected_point["point_x"],
+                    "point_y": connected_point["point_y"],
+                    "point_z": connected_point["point_z"]
+                })
+                break
+
+    return path
 
 def real_data_api(directory_path="data/ExportDtas", reRead=False):
     # 文件路径
@@ -71,42 +126,17 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
                 if prev_node_id:
                     connections.append((prev_node_id, node_id))
 
-        # 处理 connected_to 中的点
-        for connected_point in connected_to:
-            connected_coordinates = (
-                int(connected_point["point_x"]),
-                int(connected_point["point_y"]),
-                int(connected_point["point_z"])
-            )
-            connected_node_id = find_node_id_by_coordinates(connected_coordinates)
-            if not connected_node_id:  # 如果 connected_to 的点不存在于 nodes 中，则跳过
-                continue
+        # 插入 connected_to 的点到 path 中
+        path = insert_connected_points(path, connected_to)
 
-            # 确定插入位置
-            for j in range(len(path) - 1):
-                start_coordinates = (int(path[j]["point_x"]), int(path[j]["point_y"]), int(path[j]["point_z"]))
-                end_coordinates = (int(path[j + 1]["point_x"]), int(path[j + 1]["point_y"]), int(path[j + 1]["point_z"]))
-
-                if start_coordinates[0] <= connected_coordinates[0] <= end_coordinates[0] or \
-                   start_coordinates[1] <= connected_coordinates[1] <= end_coordinates[1] or \
-                   start_coordinates[2] <= connected_coordinates[2] <= end_coordinates[2]:
-                    # 插入 connected_point 到 path 中
-                    path.insert(j + 1, {
-                        "point_x": connected_point["point_x"],
-                        "point_y": connected_point["point_y"],
-                        "point_z": connected_point["point_z"]
-                    })
-                    # 更新连接
-                    start_node_id = find_node_id_by_coordinates(start_coordinates)
-                    end_node_id = find_node_id_by_coordinates(end_coordinates)
-                    if start_node_id and end_node_id:
-                        # 移除原来的直接连接
-                        if (start_node_id, end_node_id) in connections:
-                            connections.remove((start_node_id, end_node_id))
-                        # 添加新的连接
-                        connections.append((start_node_id, connected_node_id))
-                        connections.append((connected_node_id, end_node_id))
-                    break
+        # 更新连接
+        for j in range(len(path) - 1):
+            start_coordinates = (int(path[j]["point_x"]), int(path[j]["point_y"]), int(path[j]["point_z"]))
+            end_coordinates = (int(path[j + 1]["point_x"]), int(path[j + 1]["point_y"]), int(path[j + 1]["point_z"]))
+            start_node_id = find_node_id_by_coordinates(start_coordinates)
+            end_node_id = find_node_id_by_coordinates(end_coordinates)
+            if start_node_id and end_node_id:
+                connections.append((start_node_id, end_node_id))
 
     # 2. 获取 devices
     devices = {}
@@ -133,7 +163,6 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
     save_data_to_file(device_connections, device_connections_file)
 
     return nodes, connections, devices, device_connections
-
 
 if __name__ == "__main__":
     directory = "../../data/ExportDtas"
