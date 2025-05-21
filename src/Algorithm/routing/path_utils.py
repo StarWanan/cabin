@@ -109,8 +109,8 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
     # start_node = graph.find_nearest_node_any_z(*dev1_coord)
     # end_node = graph.find_nearest_node_any_z(*dev2_coord)
 
-    start_node = graph.find_nearest_node_by_layer(*dev1_coord)
-    end_node = graph.find_nearest_node_by_layer(*dev2_coord)
+    start_node, start_node_value = graph.find_nearest_node_by_layer(*dev1_coord)
+    end_node, end_node_value = graph.find_nearest_node_by_layer(*dev2_coord)
 
     # 路径计算
     path = a_star_route(graph, start_node, end_node, capacity=capacity) or []
@@ -128,6 +128,7 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
 
     # 输出结果
     print(f"\nConnection: {conn['device1']}[{dev1_coord}] -> {conn['device2']}[{dev2_coord}]")
+    print(f"device start_node:{start_node}, device end_node:{end_node}, start_node_value:{start_node_value}, end_node_value:{end_node_value}")
     print(f"Load rate: {conn['load_rate']}")
     if path:
         print_path_details(graph, path)
@@ -138,8 +139,6 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
         print("No valid path found")
 
     return result
-
-
 
 def print_path_details(graph, path):
     """打印路径详细信息"""
