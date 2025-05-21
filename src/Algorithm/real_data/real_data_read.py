@@ -29,8 +29,7 @@ def is_point_on_segment(start, end, point):
                             point_vector[2] ** 2)
 
     # 判断点是否在线段上
-    return dot_product >= 0 and dot_product <= segment_length_squared and \
-           point_length_squared <= segment_length_squared
+    return dot_product >= 0 and point_length_squared <= segment_length_squared
 
 def insert_connected_points(path, connected_to):
     """插入 connected_to 的点到 path 中"""
