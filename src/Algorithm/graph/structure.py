@@ -69,7 +69,6 @@ class Graph:
         return nearest
 
     def find_nearest_node_by_layer(self, x, y, z):
-        """根据坐标找最近节点，只要z和要查找的z是同一层"""
         # 定义每一层的z坐标范围
         layers = [
             (0, 1000),  # 第一层
@@ -91,7 +90,7 @@ class Graph:
                 break
 
         if layer_index == -1:
-            return -1  # 如果z不在任何层中，返回-1
+            return -1, None  # 如果z不在任何层中，返回(-1, None)
 
         min_dist = float('inf')
         nearest = -1
@@ -104,4 +103,4 @@ class Graph:
                     min_dist = dist
                     nearest = node_id
 
-        return nearest
+        return nearest, self.nodes[nearest] if nearest != -1 else None
