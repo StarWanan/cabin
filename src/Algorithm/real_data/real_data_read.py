@@ -28,6 +28,9 @@ def is_point_on_segment(start, end, point):
                             point_vector[1] ** 2 +
                             point_vector[2] ** 2)
 
+    # print(f"Start: {start}, End: {end}, Point: {point}")
+    # print(f"Dot Product: {dot_product}, Segment Length Squared: {segment_length_squared}, Point Length Squared: {point_length_squared}")
+
     # 判断点是否在线段上
     return dot_product >= 0 and point_length_squared <= segment_length_squared
 
@@ -55,6 +58,7 @@ def insert_connected_points(path, connected_to):
 
             if is_point_on_segment(start_coordinates, end_coordinates, connected_coordinates):
                 # 插入 connected_point 到 path 中
+                # print("insert node: ", connected_coordinates)
                 path.insert(j + 1, {
                     "point_x": connected_point["point_x"],
                     "point_y": connected_point["point_y"],
@@ -123,7 +127,9 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
                 prev_coordinates = (int(path[i - 1]["point_x"]), int(path[i - 1]["point_y"]), int(path[i - 1]["point_z"]))
                 prev_node_id = find_node_id_by_coordinates(prev_coordinates)
                 if prev_node_id:
-                    connections.append((prev_node_id, node_id))
+                    connection = (prev_node_id, node_id)
+                    if connection not in connections:
+                        connections.append(connection)
 
         # 插入 connected_to 的点到 path 中
         path = insert_connected_points(path, connected_to)
@@ -135,7 +141,9 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
             start_node_id = find_node_id_by_coordinates(start_coordinates)
             end_node_id = find_node_id_by_coordinates(end_coordinates)
             if start_node_id and end_node_id:
-                connections.append((start_node_id, end_node_id))
+                connection = (start_node_id, end_node_id)
+                if connection not in connections:
+                    connections.append(connection)
 
     # 2. 获取 devices
     devices = {}
