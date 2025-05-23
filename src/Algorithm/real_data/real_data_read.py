@@ -115,7 +115,10 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
         path = tunnel["path"]
         connected_to = tunnel.get("connected_to", [])
 
-        # 处理 path 中的点
+        # 插入 connected_to 的点到 path 中
+        path = insert_connected_points(path, connected_to)
+
+        # 处理 path 中的点并建立连接
         for i, point in enumerate(path):
             coordinates = (int(point["point_x"]), int(point["point_y"]), int(point["point_z"]))
             node_id = find_node_id_by_coordinates(coordinates)
@@ -130,20 +133,6 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
                     connection = (prev_node_id, node_id)
                     if connection not in connections:
                         connections.append(connection)
-
-        # 插入 connected_to 的点到 path 中
-        path = insert_connected_points(path, connected_to)
-
-        # 更新连接
-        for j in range(len(path) - 1):
-            start_coordinates = (int(path[j]["point_x"]), int(path[j]["point_y"]), int(path[j]["point_z"]))
-            end_coordinates = (int(path[j + 1]["point_x"]), int(path[j + 1]["point_y"]), int(path[j + 1]["point_z"]))
-            start_node_id = find_node_id_by_coordinates(start_coordinates)
-            end_node_id = find_node_id_by_coordinates(end_coordinates)
-            if start_node_id and end_node_id:
-                connection = (start_node_id, end_node_id)
-                if connection not in connections:
-                    connections.append(connection)
 
     # 2. 获取 devices
     devices = {}
