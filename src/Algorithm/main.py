@@ -4,7 +4,7 @@ from cabin.src.vis.vis import visualize_graph
 from cabin.src.Algorithm.dwg.dwg_read import dwg_api
 from cabin.src.Algorithm.real_data.real_data_read import real_data_api
 
-LINE_CAPACITY = 500
+LINE_CAPACITY = 50000
 MOCK_DATA = False
 TEST_DXF = False
 REAL_DATA = True
@@ -30,7 +30,7 @@ def main():
     elif TEST_DXF:
         nodes, connections, device, device_connections = dwg_api(file_path="../data/test.dxf")
     elif REAL_DATA:
-        nodes, connections, device, device_connections = real_data_api(directory_path="../data/ExportDtas")
+        nodes, connections, device, device_connections = real_data_api(directory_path="src/data/ExportDtas")
 
     graph = build_graph(nodes, connections, LINE_CAPACITY, custom_capacity=False)
 

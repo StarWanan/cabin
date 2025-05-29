@@ -51,6 +51,8 @@ def a_star_route(graph, start_node, end_node, capacity=-1):
                 remaining_capacity = capacity - total_usage
                 
                 if remaining_capacity <= 0:
+                    # 新增日志：输出被跳过的边及其剩余容量
+                    print(f"[A* Route] 跳过边 {edge.from_node}->{edge.to} (反向边存在: {bool(reverse_edge)}): 总容量={capacity}, 已使用={total_usage}, 剩余={remaining_capacity}")
                     edge_idx = edge.next
                     continue  # 跳过已满载的边
             

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 设置Python路径
-export PYTHONPATH="../:$PYTHONPATH"
+export PYTHONPATH="../:./src/Algorithm/:$PYTHONPATH"
 
 mkdir -p log
 # python -m Algorithm.main > output.txt
