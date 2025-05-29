@@ -74,6 +74,7 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
     nodes_connections_file = os.path.join(directory_path, "nodes_connections.json")
     devices_file = os.path.join(directory_path, "devices.json")
     device_connections_file = os.path.join(directory_path, "device_connections.json")
+    device_no_path_connections_file = os.path.join(directory_path, "no_path_connections.json")
 
     # 检查是否需要重新读取数据
     if not reRead:
@@ -81,7 +82,8 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
         nodes = load_data_from_file(nodes_file)
         connections = load_data_from_file(nodes_connections_file)
         devices = load_data_from_file(devices_file)
-        device_connections = load_data_from_file(device_connections_file)
+        # device_connections = load_data_from_file(device_connections_file)
+        device_connections = load_data_from_file(device_no_path_connections_file)
         return nodes, connections, devices, device_connections
 
     # 文件路径
