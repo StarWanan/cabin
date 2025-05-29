@@ -12,7 +12,7 @@ def build_graph(nodes, connections, line_capacity, custom_capacity=False, custom
     node_list = [(0, 0, 0)] + [nodes[key] for key in sorted(nodes.keys())]
     graph = Graph(node_list)
     node_index_map = {key: idx + 1 for idx, key in enumerate(sorted(nodes.keys()))}
-    for u, v in connections:
+    for u, v, category in connections:  # 现在connections包含类型
         u_idx = node_index_map[u]
         v_idx = node_index_map[v]
         if custom_capacity:
@@ -29,7 +29,8 @@ def build_graph(nodes, connections, line_capacity, custom_capacity=False, custom
             # 使用默认容量
             capacity = line_capacity
         # 添加双向边
-        graph.add_bidirectional_edge(u_idx, v_idx, capacity)
+        graph.add_bidirectional_edge(u_idx, v_idx, capacity, category)  # 传递隧道类型
+
     return graph
 
 def get_coordinates(graph, node_list):
@@ -112,8 +113,14 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
     start_node, start_node_value = graph.find_nearest_node_by_layer(*dev1_coord)
     end_node, end_node_value = graph.find_nearest_node_by_layer(*dev2_coord)
 
-    # 路径计算
-    path = a_star_route(graph, start_node, end_node, capacity=capacity) or []
+    # 路径计算时传递电缆类型
+    path = a_star_route(
+        graph, 
+        start_node, 
+        end_node, 
+        capacity=capacity, 
+        cable_category=conn["cable_category"]  # 传递当前连接的电缆类型
+    ) or []
     path = [path] if path and not isinstance(path, list) else path
 
     # 结果记录

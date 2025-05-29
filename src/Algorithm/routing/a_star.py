@@ -1,7 +1,7 @@
 import heapq
 import math
 
-def a_star_route(graph, start_node, end_node, capacity=-1):
+def a_star_route(graph, start_node, end_node, capacity=-1, cable_category=-1):  # 新增cable_category参数
     # 启发函数：欧氏距离
     def heuristic(a):
         a_coord = graph.nodes[a]
@@ -37,7 +37,13 @@ def a_star_route(graph, start_node, end_node, capacity=-1):
         edge_idx = graph.head[current_node]
         while edge_idx != -1:
             edge = graph.edges[edge_idx]
-            
+    
+            # 新增类型约束检查
+            if cable_category != -1 and edge.category != cable_category:
+                print(f"[A* Route] 跳过边 {edge.from_node}->{edge.to}（类型不匹配：边类型{edge.category}，要求类型{cable_category}）")
+                edge_idx = edge.next
+                continue  # 类型不匹配时跳过该边
+    
             # 添加容量约束检查
             if capacity > 0:
                 # 查找反向边

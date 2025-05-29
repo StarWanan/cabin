@@ -83,7 +83,8 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
         connections = load_data_from_file(nodes_connections_file)
         devices = load_data_from_file(devices_file)
         # device_connections = load_data_from_file(device_connections_file)
-        device_connections = load_data_from_file(device_no_path_connections_file)
+        device_connections = load_data_from_file(device_connections_file)
+        # device_connections = load_data_from_file(device_no_path_connections_file)
         return nodes, connections, devices, device_connections
 
     # 文件路径
@@ -102,9 +103,9 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
     with open(cables_file, "r", encoding="utf-8") as f:
         cables_data = json.load(f)
 
-    # 1. 获取 nodes 和 connections
+    # 1. 获取 nodes 和 connections（增加tunnel类型记录）
     nodes = {}
-    connections = []
+    connections = []  # 格式改为 (from_node, to_node, tunnel_category)
 
     def find_node_id_by_coordinates(coordinates):
         """根据坐标查找节点 ID，如果不存在则返回 None"""
@@ -114,10 +115,9 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
         return None
 
     for tunnel in tunnels_data:
-        path = tunnel["path"]
+        path = tunnel["path"]   # path 就是通道
         connected_to = tunnel.get("connected_to", [])
-
-        # 插入 connected_to 的点到 path 中
+        tunnel_category = tunnel["category"]  # 读取隧道类型
         path = insert_connected_points(path, connected_to)
 
         # 处理 path 中的点并建立连接
@@ -132,33 +132,41 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
                 prev_coordinates = (int(path[i - 1]["point_x"]), int(path[i - 1]["point_y"]), int(path[i - 1]["point_z"]))
                 prev_node_id = find_node_id_by_coordinates(prev_coordinates)
                 if prev_node_id:
-                    connection = (prev_node_id, node_id)
-                    if connection not in connections:
+                    # 记录连接时保存隧道类型
+                    connection = (prev_node_id, node_id, tunnel_category)
+                    if connection[:2] not in [c[:2] for c in connections]:  # 避免重复连接（不检查类型）
                         connections.append(connection)
-
     # 2. 获取 devices
     devices = {}
     for equip in equis_data:
         device_id = equip["id"]
         devices[device_id] = (int(equip["point_x"]), int(equip["point_y"]), int(equip["point_z"]))
-
-    # 3. 获取 device_connections
-    cable_radius_map = {cable["cable_id"]: cable["cable_radius"] for cable in cables_data}
+    # 3. 获取 device_connections（增加电缆类型记录）
+    # 改为存储完整电缆信息（包含类型）
+    cable_info_map = {
+        cable["cable_id"]: {
+            "radius": cable["cable_radius"],
+            "category": cable["cable_category"]
+        } for cable in cables_data
+    }
     device_connections = []
     for conn in connections_data:
         device1, device2 = conn["connection"]
         cable_id = conn["cable_id"]
-        load_rate = cable_radius_map.get(cable_id, 0)  # 获取 cable_radius 作为负载率
+        # 从cable_info_map中获取当前cable_id对应的信息（添加默认值处理）
+        cable_info = cable_info_map.get(cable_id, {"radius": 0, "category": "未知"})  # 关键修正
         device_connections.append({
             "device1": device1,
             "device2": device2,
-            "load_rate": load_rate
+            "load_rate": cable_info["radius"],
+            "cable_category": cable_info["category"]  # 新增电缆类型字段
         })
 
+    # 保存时需要包含类型信息（需确保save_data_to_file支持复杂结构）
     save_data_to_file(nodes, nodes_file)
-    save_data_to_file(connections, nodes_connections_file)
+    save_data_to_file(connections, nodes_connections_file)  # 现在connections包含类型
     save_data_to_file(devices, devices_file)
-    save_data_to_file(device_connections, device_connections_file)
+    save_data_to_file(device_connections, device_connections_file)  # 现在包含cable_category
 
     return nodes, connections, devices, device_connections
 

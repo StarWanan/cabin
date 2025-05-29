@@ -1,13 +1,14 @@
 import math
 
 class Edge:
-    def __init__(self, from_node, to, c, d, next_edge):
-        self.from_node = from_node  # 起始节点编号
-        self.to = to                # 目标节点编号
-        self.c = c                  # 边容量
-        self.d = d                  # 边距离
-        self.real_c = 0             # 边目前实际容量
+    def __init__(self, from_node, to, c, d, next_edge, category):  # 新增category参数
+        self.from_node = from_node
+        self.to = to
+        self.c = c
+        self.d = d
+        self.real_c = 0
         self.next = next_edge
+        self.category = category  # 记录该边所属的隧道类型
 
 class Graph:
     def __init__(self, nodes):
@@ -18,8 +19,7 @@ class Graph:
         self.head = [-1] * len(nodes)  # 头指针数组
         self.edges = []
 
-    def add_directed_edge(self, u, v, c):
-        """添加有向边并自动计算距离"""
+    def add_directed_edge(self, u, v, c, category):  # 新增category参数
         u_coord = self.nodes[u]
         v_coord = self.nodes[v]
         distance = math.sqrt(
@@ -27,13 +27,12 @@ class Graph:
             (u_coord[1]-v_coord[1])**2 + 
             (u_coord[2]-v_coord[2])**2
         )
-        self.edges.append(Edge(u, v, c, distance, self.head[u]))
+        self.edges.append(Edge(u, v, c, distance, self.head[u], category))  # 传递类型
         self.head[u] = len(self.edges) - 1
 
-    def add_bidirectional_edge(self, u, v, c):
-        """添加无向边（双向边）"""
-        self.add_directed_edge(u, v, c)
-        self.add_directed_edge(v, u, c)
+    def add_bidirectional_edge(self, u, v, c, category):  # 新增category参数
+        self.add_directed_edge(u, v, c, category)  # 双向边使用相同类型
+        self.add_directed_edge(v, u, c, category)
 
     def find_nearest_node(self, x, y, z):
         """根据坐标找最近节点（用于设备定位），只考虑z坐标相同的节点"""

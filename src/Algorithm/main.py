@@ -30,7 +30,7 @@ def main():
     elif TEST_DXF:
         nodes, connections, device, device_connections = dwg_api(file_path="../data/test.dxf")
     elif REAL_DATA:
-        nodes, connections, device, device_connections = real_data_api(directory_path="src/data/ExportDtas")
+        nodes, connections, device, device_connections = real_data_api(directory_path="src/data/ExportDtas", reRead=False)
 
     graph = build_graph(nodes, connections, LINE_CAPACITY, custom_capacity=False)
 
