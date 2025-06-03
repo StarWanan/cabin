@@ -69,12 +69,13 @@ def insert_connected_points(path, connected_to):
     return path
 
 def real_data_api(directory_path="data/ExportDtas", reRead=False):
-    # 文件路径
+    # 处理后的文件路径
     nodes_file = os.path.join(directory_path, "nodes.json")
     nodes_connections_file = os.path.join(directory_path, "nodes_connections.json")
     devices_file = os.path.join(directory_path, "devices.json")
     device_connections_file = os.path.join(directory_path, "device_connections.json")
-    device_no_path_connections_file = os.path.join(directory_path, "no_path_connections.json")
+    # device_no_path_connections_file = os.path.join(directory_path, "no_path_connections.json")
+    node_metadata_file = os.path.join(directory_path, "node_metadata.json")
 
     # 检查是否需要重新读取数据
     if not reRead:
@@ -85,7 +86,8 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
         # device_connections = load_data_from_file(device_connections_file)
         device_connections = load_data_from_file(device_connections_file)
         # device_connections = load_data_from_file(device_no_path_connections_file)
-        return nodes, connections, devices, device_connections
+        node_metadata = load_data_from_file(node_metadata_file)
+        return nodes, connections, devices, device_connections, node_metadata
 
     # 文件路径
     tunnels_file = os.path.join(directory_path, "Tunnels.json")
@@ -104,8 +106,9 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
         cables_data = json.load(f)
 
     # 1. 获取 nodes 和 connections（增加tunnel类型记录）
-    nodes = {}
-    connections = []  # 格式改为 (from_node, to_node, tunnel_category)
+    nodes = {}  # 仅存储坐标：{node_id: (x, y, z)}
+    node_metadata = {}  # 新增：存储元数据 {node_id: {"type": ..., "pointr_radius": ...}}
+    connections = []  # 格式：(from_node, to_node, tunnel_category)
 
     def find_node_id_by_coordinates(coordinates):
         """根据坐标查找节点 ID，如果不存在则返回 None"""
@@ -113,20 +116,51 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
             if node_coords == coordinates:
                 return node_id
         return None
+    
+    def find_cwb_point_id_by_coordinates(coordinates):
+        """根据坐标查找 CWBranPoint ID，如果不存在则返回 None"""
+        for point_id, point_coords in cwbranpoint_map.items():
+            if point_coords["point_x"] == coordinates[0] and \
+               point_coords["point_y"] == coordinates[1] and \
+               point_coords["point_z"] == coordinates[2]:
+                return point_id
+        return None
+
+    # 新增：读取 CWBranPoint 数据
+    cwbranpoint_file = os.path.join(directory_path, "CWBranPoint.json")
+    with open(cwbranpoint_file, "r", encoding="utf-8") as f:
+        cwbranpoint_data = json.load(f)
+    cwbranpoint_map = {item["id"]: item for item in cwbranpoint_data}  # 按 id 映射
 
     for tunnel in tunnels_data:
-        path = tunnel["path"]   # path 就是通道
+        path = tunnel["path"]
         connected_to = tunnel.get("connected_to", [])
-        tunnel_category = tunnel["category"]  # 读取隧道类型
+        tunnel_category = tunnel["category"]
         path = insert_connected_points(path, connected_to)
 
         # 处理 path 中的点并建立连接
         for i, point in enumerate(path):
             coordinates = (int(point["point_x"]), int(point["point_y"]), int(point["point_z"]))
             node_id = find_node_id_by_coordinates(coordinates)
+            cwb_coordinates = (point["point_x"], point["point_y"], point["point_z"])
+            cwb_point_id = find_cwb_point_id_by_coordinates(cwb_coordinates)
             if not node_id:  # 如果节点不存在则创建
                 node_id = f"P{len(nodes) + 1}"
-                nodes[node_id] = coordinates
+                # 从 CWBranPoint 获取类型和弯曲半径
+                cw_info = cwbranpoint_map.get(cwb_point_id, {"type": -1, "pointr_radius": 0})
+                nodes[node_id] = coordinates  # 仅存储坐标
+                node_metadata[node_id] = {  # 元数据存入新字典
+                    "type": cw_info["type"],
+                    "pointr_radius": cw_info["pointr_radius"]
+                }
+            else:
+                # 已有节点，补充元数据（如果未存在）
+                if node_id not in node_metadata:
+                    cw_info = cwbranpoint_map.get(node_id, {"type": -1, "pointr_radius": 0})
+                    node_metadata[node_id] = {
+                        "type": cw_info["type"],
+                        "pointr_radius": cw_info["pointr_radius"]
+                    }
 
             if i > 0:  # 建立连接
                 prev_coordinates = (int(path[i - 1]["point_x"]), int(path[i - 1]["point_y"]), int(path[i - 1]["point_z"]))
@@ -141,34 +175,38 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
     for equip in equis_data:
         device_id = equip["id"]
         devices[device_id] = (int(equip["point_x"]), int(equip["point_y"]), int(equip["point_z"]))
+    
     # 3. 获取 device_connections（增加电缆类型记录）
     # 改为存储完整电缆信息（包含类型）
     cable_info_map = {
         cable["cable_id"]: {
-            "radius": cable["cable_radius"],
-            "category": cable["cable_category"]
+            "radius": cable["cable_radius"],  # 对应Cables.json中的cable_radius字段
+            "bendR": cable["cable_bendR"],
+            "category": cable["cable_category"]  # 对应Cables.json中的cable_category字段（数字类型）
         } for cable in cables_data
     }
     device_connections = []
     for conn in connections_data:
         device1, device2 = conn["connection"]
         cable_id = conn["cable_id"]
-        # 从cable_info_map中获取当前cable_id对应的信息（添加默认值处理）
-        cable_info = cable_info_map.get(cable_id, {"radius": 0, "category": "未知"})  # 关键修正
+        # 调整默认值类型与原始数据一致（Cables.json中cable_category为数字，默认值改为0）
+        cable_info = cable_info_map.get(cable_id, {"radius": 0, "bendR": 0, "category": 0})  # 关键修正：默认值类型匹配
         device_connections.append({
             "device1": device1,
             "device2": device2,
-            "load_rate": cable_info["radius"],
-            "cable_category": cable_info["category"]  # 新增电缆类型字段
+            "load_rate": cable_info["radius"],  # 使用cable_radius作为负载率
+            "bendR": cable_info["bendR"],
+            "cable_category": cable_info["category"]  # 使用cable_category作为电缆类型（数字）
         })
 
-    # 保存时需要包含类型信息（需确保save_data_to_file支持复杂结构）
+    # 保存时需要包含类型信息
     save_data_to_file(nodes, nodes_file)
     save_data_to_file(connections, nodes_connections_file)  # 现在connections包含类型
     save_data_to_file(devices, devices_file)
     save_data_to_file(device_connections, device_connections_file)  # 现在包含cable_category
+    save_data_to_file(node_metadata, node_metadata_file)  # 新增保存元数据
 
-    return nodes, connections, devices, device_connections
+    return nodes, connections, devices, device_connections, node_metadata
 
 if __name__ == "__main__":
     directory = "../../data/ExportDtas"
