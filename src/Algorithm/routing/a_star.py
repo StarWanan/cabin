@@ -1,7 +1,7 @@
 import heapq
 import math
 
-def a_star_route(graph, start_node, end_node, capacity=-1, cable_category=-1, cable_radius=0, check_bend_radius=False):  # 新增cable_radius参数
+def a_star_route(graph, start_node, end_node, capacity=-1, cable_category=-1, cable_radius=0, check_bend_radius=True):  # 新增cable_radius参数
     # 启发函数：欧氏距离
     def heuristic(a):
         a_coord = graph.nodes[a]
@@ -66,11 +66,10 @@ def a_star_route(graph, start_node, end_node, capacity=-1, cable_category=-1, ca
             if check_bend_radius:
                 # 获取边两端的节点数据
                 from_node_r = graph.node_metadata[edge.from_node]["pointr_radius"]
-                to_node_r = graph.nodnode_metadataes[edge.to]["pointr_radius"]
+                to_node_r = graph.node_metadata[edge.to]["pointr_radius"]
 
                 # 检查两端节点的弯曲半径（节点半径不为0时）
-                if (from_node_r["point_radius"] != 0 and cable_radius > from_node_r["point_radius"]) or \
-                   (to_node_r["point_radius"] != 0 and cable_radius > to_node_r["point_radius"]):
+                if (from_node_r != 0 and cable_radius > from_node_r) or (to_node_r != 0 and cable_radius > to_node_r):
                     edge_idx = edge.next
                     continue  # 不满足弯曲半径要求，跳过此边
 
