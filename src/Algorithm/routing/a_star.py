@@ -1,7 +1,7 @@
 import heapq
 import math
 
-def a_star_route(graph, start_node, end_node, capacity=-1):
+def a_star_route(graph, start_node, end_node, capacity=-1, cable_category=-1, cable_radius=0, check_bend_radius=True):  # 新增cable_radius参数
     # 启发函数：欧氏距离
     def heuristic(a):
         a_coord = graph.nodes[a]
@@ -37,7 +37,13 @@ def a_star_route(graph, start_node, end_node, capacity=-1):
         edge_idx = graph.head[current_node]
         while edge_idx != -1:
             edge = graph.edges[edge_idx]
-            
+
+            # 新增通道 & 电缆类型匹配约束检查
+            if cable_category != -1 and edge.category != cable_category:
+                print(f"[A* Route] 跳过边 {edge.from_node}->{edge.to}（类型不匹配：边类型{edge.category}，要求类型{cable_category}）")
+                edge_idx = edge.next
+                continue  # 类型不匹配时跳过该边
+
             # 添加容量约束检查
             if capacity > 0:
                 # 查找反向边
@@ -56,6 +62,17 @@ def a_star_route(graph, start_node, end_node, capacity=-1):
                     edge_idx = edge.next
                     continue  # 跳过已满载的边
             
+            # 新增：弯曲半径检查（仅当开关开启时）
+            if check_bend_radius:
+                # 获取边两端的节点数据
+                from_node_r = graph.node_metadata[edge.from_node]["pointr_radius"]
+                to_node_r = graph.node_metadata[edge.to]["pointr_radius"]
+
+                # 检查两端节点的弯曲半径（节点半径不为0时）
+                if (from_node_r != 0 and cable_radius > from_node_r) or (to_node_r != 0 and cable_radius > to_node_r):
+                    edge_idx = edge.next
+                    continue  # 不满足弯曲半径要求，跳过此边
+
             neighbor = edge.to
             new_g = current_g + edge.d
             
@@ -66,6 +83,6 @@ def a_star_route(graph, start_node, end_node, capacity=-1):
                 heapq.heappush(open_heap, (f, new_g, neighbor, current_node))
             
             edge_idx = edge.next
-    
+
     return None  # 无可行路径
 

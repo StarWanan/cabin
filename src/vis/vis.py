@@ -90,6 +90,7 @@ def visualize_graph(nodes, connections, device=None, paths=None,
 
     # 3. 连接线采样和批量绘制
     sampled_connections = connections
+
     if sample_ratio_connections < 1.0 and len(connections) > 0:
         num_sampled_connections = int(len(connections) * sample_ratio_connections)
         if num_sampled_connections == 0 and len(connections) > 0: # 确保至少采样一个连接
@@ -100,9 +101,11 @@ def visualize_graph(nodes, connections, device=None, paths=None,
     # 过滤掉那些端点不在 sampled_nodes 中的连接
     valid_sampled_connections = []
     if sampled_nodes: # 只有在有采样节点时才进行连接过滤
-        for start_node_key, end_node_key in sampled_connections:
+        for conn in sampled_connections:  # 修改此处：遍历三元组连接
+            start_node_key = conn[0]  # 提取第一个元素（起始节点）
+            end_node_key = conn[1]    # 提取第二个元素（终止节点）
             if start_node_key in sampled_nodes and end_node_key in sampled_nodes:
-                valid_sampled_connections.append((start_node_key, end_node_key))
+                valid_sampled_connections.append((start_node_key, end_node_key))  # 仅保留二元组用于绘制
     else: # 如果没有采样节点，则不显示任何连接
         valid_sampled_connections = []
 
@@ -151,7 +154,7 @@ def visualize_graph(nodes, connections, device=None, paths=None,
         node_id_to_key = {i+1: key for i, key in enumerate(original_node_keys_sorted)}  # 节点ID到key的映射
 
         for idx, path in enumerate(sampled_paths):
-            # 新增：打印当前路径的节点ID/坐标及对应坐标
+            # 新增：打印当前路径的节点ID/坐标及对应坐标：
             print(f"路径{idx+1}经过的节点ID/坐标及对应坐标：")
             path_coords = []  # 提前初始化坐标列表
             for item in path:

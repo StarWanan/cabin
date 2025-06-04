@@ -1,25 +1,26 @@
 import math
 
 class Edge:
-    def __init__(self, from_node, to, c, d, next_edge):
-        self.from_node = from_node  # 起始节点编号
-        self.to = to                # 目标节点编号
-        self.c = c                  # 边容量
-        self.d = d                  # 边距离
-        self.real_c = 0             # 边目前实际容量
+    def __init__(self, from_node, to, c, d, next_edge, category):  # 新增category参数
+        self.from_node = from_node
+        self.to = to
+        self.c = c
+        self.d = d
+        self.real_c = 0
         self.next = next_edge
+        self.category = category  # 记录该边所属的隧道类型
 
 class Graph:
-    def __init__(self, nodes):
+    def __init__(self, nodes, node_metadata=None):
         """
         :param nodes: 节点坐标列表，索引即节点ID（从1开始）
         """
         self.nodes = nodes  # 节点0位置空置
+        self.node_metadata = node_metadata if node_metadata is not None else {}   # 节点元数据字典
         self.head = [-1] * len(nodes)  # 头指针数组
         self.edges = []
 
-    def add_directed_edge(self, u, v, c):
-        """添加有向边并自动计算距离"""
+    def add_directed_edge(self, u, v, c, category):  # 新增category参数
         u_coord = self.nodes[u]
         v_coord = self.nodes[v]
         distance = math.sqrt(
@@ -27,13 +28,12 @@ class Graph:
             (u_coord[1]-v_coord[1])**2 + 
             (u_coord[2]-v_coord[2])**2
         )
-        self.edges.append(Edge(u, v, c, distance, self.head[u]))
+        self.edges.append(Edge(u, v, c, distance, self.head[u], category))  # 传递类型
         self.head[u] = len(self.edges) - 1
 
-    def add_bidirectional_edge(self, u, v, c):
-        """添加无向边（双向边）"""
-        self.add_directed_edge(u, v, c)
-        self.add_directed_edge(v, u, c)
+    def add_bidirectional_edge(self, u, v, c, category):  # 新增category参数
+        self.add_directed_edge(u, v, c, category)  # 双向边使用相同类型
+        self.add_directed_edge(v, u, c, category)
 
     def find_nearest_node(self, x, y, z):
         """根据坐标找最近节点（用于设备定位），只考虑z坐标相同的节点"""
@@ -67,7 +67,6 @@ class Graph:
                 min_dist = dist
                 nearest = node_id
         return nearest
-
     def find_nearest_node_by_layer(self, x, y, z):
         # 定义每一层的z坐标范围
         layers = [
@@ -98,6 +97,43 @@ class Graph:
             nx, ny, nz = self.nodes[node_id]
             # 检查节点是否在同一层
             if layers[layer_index][0] <= nz < layers[layer_index][1]:
+                dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2)
+                if dist < min_dist:
+                    min_dist = dist
+                    nearest = node_id
+
+        return nearest, self.nodes[nearest] if nearest != -1 else None
+    
+    def find_nearest_node_by_layer_and_ptype(self, x, y, z):
+        # 定义每一层的z坐标范围
+        layers = [
+            (0, 1000),  # 第一层
+            (1000, 2900),  # 第二层
+            (2900, 4800),  # 第三层
+            (4800, 7500),  # 第四层
+            (7500, 10200),  # 第五层
+            (10200, 12700),  # 第六层
+            (12700, 15200),  # 第七层
+            (15200, 17800),  # 第八层
+            (17800, 30000)  # 第九层
+        ]
+
+        # 找到z所在的层
+        layer_index = -1
+        for i, (lower, upper) in enumerate(layers):
+            if lower <= z < upper:
+                layer_index = i
+                break
+
+        if layer_index == -1:
+            return -1, None  # 如果z不在任何层中，返回(-1, None)
+
+        min_dist = float('inf')
+        nearest = -1
+        for node_id in range(1, len(self.nodes)):
+            nx, ny, nz = self.nodes[node_id]
+            # 检查节点是否在同一层且接入类型合法
+            if (layers[layer_index][0] <= nz < layers[layer_index][1] and self.node_metadata[node_id]["type"] in {0, 1, 4}):  
                 dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2)
                 if dist < min_dist:
                     min_dist = dist
