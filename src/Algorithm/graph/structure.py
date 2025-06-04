@@ -103,7 +103,7 @@ class Graph:
                     nearest = node_id
 
         return nearest, self.nodes[nearest] if nearest != -1 else None
-    
+
     def find_nearest_node_by_layer_and_ptype(self, x, y, z):
         # 定义每一层的z坐标范围
         layers = [
@@ -126,17 +126,25 @@ class Graph:
                 break
 
         if layer_index == -1:
+            print(f"[A* Route] 节点 ({x}, {y}, {z}) 找不到同层接入点，原因：z不在任何层中")
             return -1, None  # 如果z不在任何层中，返回(-1, None)
 
         min_dist = float('inf')
         nearest = -1
+        reason = None  # 用于记录原因
         for node_id in range(1, len(self.nodes)):
             nx, ny, nz = self.nodes[node_id]
             # 检查节点是否在同一层且接入类型合法
-            if (layers[layer_index][0] <= nz < layers[layer_index][1] and self.node_metadata[node_id]["type"] in {0, 1, 4}):  
-                dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2)
-                if dist < min_dist:
-                    min_dist = dist
-                    nearest = node_id
+            if layers[layer_index][0] <= nz < layers[layer_index][1]:
+                if self.node_metadata[node_id]["type"] in {0, 1, 4}:
+                    dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2)
+                    if dist < min_dist:
+                        min_dist = dist
+                        nearest = node_id
+                else:
+                    reason = f"节点类型不符合「0,1,4」: {self.node_metadata[node_id]['type']}"
+
+        if nearest == -1:
+            print(f"[A* Route] 节点 ({x}, {y}, {z}) 找不到同层接入点，原因：{reason}")
 
         return nearest, self.nodes[nearest] if nearest != -1 else None

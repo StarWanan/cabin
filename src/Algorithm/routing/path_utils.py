@@ -159,7 +159,6 @@ def print_path_details(graph, path):
     coordinates_str = ' -> '.join(map(str, coordinates))
     print(f"Path coordinates: {coordinates_str}")
 
-
 def print_capacity_report(graph):
     """生成容量统计报告"""
     print("\n线路容量统计:")

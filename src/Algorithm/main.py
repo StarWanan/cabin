@@ -30,7 +30,7 @@ def main():
     elif TEST_DXF:
         nodes, connections, device, device_connections = dwg_api(file_path="../data/test.dxf")
     elif REAL_DATA:
-        nodes, connections, device, device_connections, node_metadata = real_data_api(directory_path="../data/ExportDtas", reRead=False)
+        nodes, connections, device, device_connections, node_metadata = real_data_api(directory_path="src/data/ExportDtas", reRead=False)
 
     graph = build_graph(nodes, connections, LINE_CAPACITY, custom_capacity=False, node_metadata=node_metadata)  # noqa: F405
 
@@ -76,7 +76,7 @@ def main():
             nodes, 
             connections, 
             device,
-            paths=extracted_paths, # 使用从 routing_results 提取的路径
+            paths=extracted_paths,  # 使用从 routing_results 提取的路径
             sample_ratio_nodes=1,           # 显示节点率
             sample_ratio_connections=1,     # 显示连接率
             max_paths_to_display=30,      # 显示路径数量上限
