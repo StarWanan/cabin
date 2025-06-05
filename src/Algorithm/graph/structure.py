@@ -136,13 +136,13 @@ class Graph:
             nx, ny, nz = self.nodes[node_id]
             # 检查节点是否在同一层且接入类型合法
             if layers[layer_index][0] <= nz < layers[layer_index][1]:
-                if self.node_metadata[node_id]["type"] in {0, 1, 4}:
+                if self.node_metadata[node_id]["type"] in {4}:
                     dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2)
                     if dist < min_dist:
                         min_dist = dist
                         nearest = node_id
                 else:
-                    reason = f"节点类型不符合「0,1,4」: {self.node_metadata[node_id]['type']}"
+                    reason = f"节点类型不符合「4」: {self.node_metadata[node_id]['type']}"
 
         if nearest == -1:
             print(f"[A* Route] 节点 ({x}, {y}, {z}) 找不到同层接入点，原因：{reason}")
