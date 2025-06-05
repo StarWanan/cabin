@@ -106,6 +106,8 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
     # 获取设备坐标
     dev1_coord = device[conn["device1"]]
     dev2_coord = device[conn["device2"]]
+    # 获取设备连接需要的cable_category
+    cable_category = conn["cable_category"]
 
     # 节点定位
     # start_node = graph.find_nearest_node(*dev1_coord)
@@ -114,8 +116,8 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
     # start_node = graph.find_nearest_node_any_z(*dev1_coord)
     # end_node = graph.find_nearest_node_any_z(*dev2_coord)
 
-    start_node, start_node_value = graph.find_nearest_node_by_layer_and_ptype(*dev1_coord)
-    end_node, end_node_value = graph.find_nearest_node_by_layer_and_ptype(*dev2_coord)
+    start_node, start_node_value = graph.find_nearest_node_by_layer_ptype_and_cable_category(*dev1_coord, cable_category)
+    end_node, end_node_value = graph.find_nearest_node_by_layer_ptype_and_cable_category(*dev2_coord, cable_category)
 
     # 路径计算时传递电缆类型
     path = a_star_route(
