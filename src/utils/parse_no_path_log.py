@@ -26,8 +26,8 @@ def parse_no_path_connections(log_path):
                 }
 
             if line.startswith("device start_node:") and current_connection:
-                # 匹配所有带括号的坐标值（包含start和end）
-                coord_pattern = r'(\w+_node_value):\(([^)]+)\)'
+                # 匹配所有带方括号的坐标值（包含start和end）
+                coord_pattern = r'(\w+_node_value):\[([^\]]+)\]'
                 matches = re.findall(coord_pattern, line)
 
                 if len(matches) >= 2:
@@ -60,7 +60,7 @@ def parse_no_path_connections(log_path):
 if __name__ == "__main__":
     import json
 
-    log_file = "log/log_20250527_192740.txt"  # 根据实际日志路径调整
+    log_file = "log/log_20250620_151854.txt"  # 根据实际日志路径调整
     result = parse_no_path_connections(log_file)
 
     print(f"共找到 {len(result)} 条未找到路径的连接：")
@@ -68,5 +68,5 @@ if __name__ == "__main__":
         print(f"{idx}. {conn['device1']} -> {conn['device2']} (load_rate: {conn['load_rate']})")
 
     # 输出为JSON文件（与device_connections.json结构一致）
-    with open("src/data/ExportDtas/no_path_connections.json", "w", encoding='utf-8') as f:
+    with open("log/no_path_connections.json", "w", encoding='utf-8') as f:
         json.dump(result, f, ensure_ascii=False, indent=2)

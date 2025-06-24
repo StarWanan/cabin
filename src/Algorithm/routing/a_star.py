@@ -40,7 +40,7 @@ def a_star_route(graph, start_node, end_node, capacity=-1, cable_category=-1, ca
             edge = graph.edges[edge_idx]
             reason = None  # 用于记录跳过的原因
 
-            if cable_category != -1 and edge.category != cable_category:
+            if cable_category != -1 and edge.category != cable_category and {edge.category, cable_category} != {0, 3}:
                 reason = f"类型不匹配：边类型{edge.category}，要求类型{cable_category}"
                 edge_idx = edge.next
                 continue

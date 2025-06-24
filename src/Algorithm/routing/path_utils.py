@@ -116,8 +116,12 @@ def process_single_connection(graph, conn, paths, device, capacity=-1):
     # start_node = graph.find_nearest_node_any_z(*dev1_coord)
     # end_node = graph.find_nearest_node_any_z(*dev2_coord)
 
-    start_node, start_node_value = graph.find_nearest_node_by_layer_ptype_and_cable_category(*dev1_coord, cable_category)
-    end_node, end_node_value = graph.find_nearest_node_by_layer_ptype_and_cable_category(*dev2_coord, cable_category)
+    # start_node, start_node_value = graph.find_nearest_node_by_layer_ptype_and_cable_category(*dev1_coord, cable_category)
+    # end_node, end_node_value = graph.find_nearest_node_by_layer_ptype_and_cable_category(*dev2_coord, cable_category)
+
+    # 不考虑接入类型
+    start_node, start_node_value = graph.find_nearest_node_by_layer_and_cable_category(*dev1_coord, cable_category)
+    end_node, end_node_value = graph.find_nearest_node_by_layer_and_cable_category(*dev2_coord, cable_category)
 
     # 路径计算时传递电缆类型
     path = a_star_route(

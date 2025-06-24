@@ -196,3 +196,48 @@ class Graph:
             print(f"[A* Route] 节点 ({x}, {y}, {z}) 找不到同层接入点，原因：{reason}")
 
         return nearest, self.nodes[nearest] if nearest != -1 else None
+    
+    def find_nearest_node_by_layer_and_cable_category(self, x, y, z, cable_category):
+        # 定义每一层的z坐标范围
+        layers = [
+            (0, 1000),  # 第一层
+            (1000, 2900),  # 第二层
+            (2900, 4800),  # 第三层
+            (4800, 7500),  # 第四层
+            (7500, 10200),  # 第五层
+            (10200, 12700),  # 第六层
+            (12700, 15200),  # 第七层
+            (15200, 17800),  # 第八层
+            (17800, 30000)  # 第九层
+        ]
+
+        # 找到z所在的层
+        layer_index = -1
+        for i, (lower, upper) in enumerate(layers):
+            if lower <= z < upper:
+                layer_index = i
+                break
+
+        if layer_index == -1:
+            print(f"[A* Route] 节点 ({x}, {y}, {z}) 找不到同层接入点，原因：z不在任何层中")
+            return -1, None  # 如果z不在任何层中，返回(-1, None)
+
+        min_dist = float('inf')
+        nearest = -1
+        reason = None  # 用于记录原因
+        for node_id in range(1, len(self.nodes)):
+            nx, ny, nz = self.nodes[node_id]
+            # 检查节点是否在同一层且接入类型合法
+            if layers[layer_index][0] <= nz < layers[layer_index][1]:
+                if self.node_metadata[node_id]["tunnel_category"] == cable_category or {self.node_metadata[node_id]["tunnel_category"], cable_category} == {0, 3}:
+                    dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2)
+                    if dist < min_dist:
+                        min_dist = dist
+                        nearest = node_id
+                else:
+                    reason = f"节点tunnel_category != cable_category: {self.node_metadata[node_id]['tunnel_category']}"
+
+        if nearest == -1:
+            print(f"[A* Route] 节点 ({x}, {y}, {z}) 找不到同层接入点，原因：{reason}")
+
+        return nearest, self.nodes[nearest] if nearest != -1 else None
