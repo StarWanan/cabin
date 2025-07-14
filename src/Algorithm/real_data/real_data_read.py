@@ -140,7 +140,7 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
 
         # 处理 path 中的点并建立连接
         for i, point in enumerate(path):
-            coordinates = (int(point["point_x"]), int(point["point_y"]), int(point["point_z"]))
+            coordinates = (round(point["point_x"]), round(point["point_y"]), round(point["point_z"]))
             node_id = find_node_id_by_coordinates(coordinates)
             cwb_coordinates = (point["point_x"], point["point_y"], point["point_z"])
             cwb_point_id = find_cwb_point_id_by_coordinates(cwb_coordinates)
@@ -163,7 +163,7 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
                     }
 
             if i > 0:  # 建立连接
-                prev_coordinates = (int(path[i - 1]["point_x"]), int(path[i - 1]["point_y"]), int(path[i - 1]["point_z"]))
+                prev_coordinates = (round(path[i - 1]["point_x"]), round(path[i - 1]["point_y"]), round(path[i - 1]["point_z"]))
                 prev_node_id = find_node_id_by_coordinates(prev_coordinates)
                 if prev_node_id:
                     # 记录连接时保存隧道类型
@@ -174,7 +174,7 @@ def real_data_api(directory_path="data/ExportDtas", reRead=False):
     devices = {}
     for equip in equis_data:
         device_id = equip["id"]
-        devices[device_id] = (int(equip["point_x"]), int(equip["point_y"]), int(equip["point_z"]))
+        devices[device_id] = (round(equip["point_x"]), round(equip["point_y"]), round(equip["point_z"]))
     
     # 3. 获取 device_connections（增加电缆类型记录）
     # 改为存储完整电缆信息（包含类型）
